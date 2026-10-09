@@ -327,8 +327,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .car-watch { opacity: 0; }
 .car-through { bottom: 18px; opacity: 0; transform: scale(.84) scaleX(-1); }
 
-.pumpkin-row { position: absolute; z-index: 8; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: space-around; pointer-events: none; }
-.pumpkin-prop { position: relative; width: clamp(48px, 5.2vw, 74px); display: block; flex: 0 0 auto; }
+.pumpkin-row { position: absolute; z-index: 8; left: 0; right: 0; height: 82px; pointer-events: none; }
+.pumpkin-prop { position: absolute; left: var(--pumpkin-x, 50%); bottom: var(--pumpkin-y, 0); width: clamp(48px, 5.2vw, 74px); display: block; transform: translateX(-50%) rotate(var(--pumpkin-tilt, 0deg)) scale(var(--pumpkin-scale, 1)); transform-origin: 50% 100%; }
 .pumpkin-prop img { width: 100%; height: auto; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,.68)) drop-shadow(0 0 7px rgba(255,117,22,.28)); }
 .pumpkin-prop::after { position: absolute; inset: 0; content: ""; background: #ffd56a; mix-blend-mode: screen; opacity: .3; filter: brightness(.95) drop-shadow(0 0 2px rgba(255,133,22,.55)); -webkit-mask: url('./assets/pumpkin-carving-mask.svg') center / 100% 100% no-repeat; mask: url('./assets/pumpkin-carving-mask.svg') center / 100% 100% no-repeat; animation: pumpkin-carving-pulse 3.1s ease-in-out infinite; }
 .pumpkin-prop:nth-child(2n) { width: clamp(43px, 4.6vw, 65px); }.pumpkin-prop:nth-child(2n)::after { animation-delay: -1.1s; }.pumpkin-prop:nth-child(3n)::after { animation-delay: -2s; }
@@ -820,12 +820,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes conductor-fluid-cycle {
   0%, 6.24% { opacity: 1; }
   6.25%, 100% { opacity: 0; }
-}
-@keyframes pumpkin-rock {
-  0%, 100% { transform: rotate(-.12deg); }
-  25% { transform: rotate(.2deg); }
-  49% { transform: rotate(-.08deg); }
-  74% { transform: rotate(.14deg); }
 }
 @keyframes phantom-float {
   0%, 100% { transform: translateY(0) rotate(-.18deg) scale(1); filter: drop-shadow(0 16px 18px rgba(0, 0, 0, .72)) drop-shadow(0 0 12px rgba(71, 224, 231, .25)); }

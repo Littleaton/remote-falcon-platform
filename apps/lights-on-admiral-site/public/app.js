@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js?v=20261009-queue1';
+import { SITE_CONFIG } from './config.js?v=20261009-pumpkin-placement1';
 import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
 import { choosePerformer } from './performers.js';
 
@@ -60,6 +60,27 @@ function randomizePerformanceTiming() {
   root.style.setProperty('--death-wing-duration', seconds(11, 5));
   root.style.setProperty('--admiral-wing-delay', negativeSeconds(10));
   root.style.setProperty('--death-wing-delay', negativeSeconds(12));
+}
+
+function randomizePumpkinPlacement() {
+  if (document.documentElement.dataset.season !== 'halloween') return;
+
+  const randomBetween = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
+
+  $$('.pumpkin-row').forEach((row) => {
+    const pumpkins = [...row.querySelectorAll('.pumpkin-prop')];
+    const isBackShoulder = row.classList.contains('pumpkin-row-back');
+    const usableWidth = 92;
+    const segmentWidth = usableWidth / pumpkins.length;
+
+    pumpkins.forEach((pumpkin, index) => {
+      const x = 4 + segmentWidth * (index + randomBetween(0.2, 0.8));
+      pumpkin.style.setProperty('--pumpkin-x', `${x.toFixed(2)}%`);
+      pumpkin.style.setProperty('--pumpkin-y', `${randomBetween(isBackShoulder ? -2 : -4, isBackShoulder ? 8 : 5).toFixed(1)}px`);
+      pumpkin.style.setProperty('--pumpkin-scale', randomBetween(isBackShoulder ? 0.74 : 0.86, isBackShoulder ? 1 : 1.13).toFixed(3));
+      pumpkin.style.setProperty('--pumpkin-tilt', `${randomBetween(-6, 6).toFixed(2)}deg`);
+    });
+  });
 }
 
 function startFlyingGhost() {
@@ -701,6 +722,7 @@ function bindEvents() {
 }
 
 applyConfig();
+randomizePumpkinPlacement();
 startFlyingGhost();
 startVisitTraffic();
 bindEvents();
