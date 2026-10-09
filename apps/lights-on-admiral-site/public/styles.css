@@ -312,9 +312,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .visit-ghost-three { left: 55%; top: 40%; width: clamp(60px, 6.3vw, 86px); animation: visit-ghost-drift 9.4s ease-in-out infinite -6.1s; }
 
 .visit-road { position: absolute; z-index: 6; left: -4%; right: -4%; background: #171e1d; border-top: 1px solid rgba(255,255,255,.12); border-bottom: 1px solid rgba(0,0,0,.8); box-shadow: 0 -10px 25px rgba(0,0,0,.38); }
-.road-back { bottom: 122px; height: 84px; transform: perspective(450px) rotateX(8deg); background: linear-gradient(180deg, #151b19, #0c1110); }
-.road-front { bottom: 0; height: 132px; transform: perspective(420px) rotateX(5deg); background: linear-gradient(180deg, #202826, #101615); }
-.road-dashes { position: absolute; top: 55%; left: 0; right: 0; height: 3px; opacity: .36; background: repeating-linear-gradient(90deg, transparent 0 7%, #b2aa78 7.1% 10%, transparent 10.1% 17%); }
+.road-back { bottom: 122px; height: 94px; transform: perspective(450px) rotateX(8deg); background: linear-gradient(180deg, #151b19, #0c1110); }
+.road-front { bottom: 0; height: 122px; transform: perspective(420px) rotateX(5deg); background: linear-gradient(180deg, #202826, #101615); }
 .visit-car { position: absolute; left: -16%; width: clamp(82px, 9vw, 116px); height: 42px; bottom: 21px; border-radius: 23px 28px 10px 10px; background: #525b38; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 8px 12px rgba(0,0,0,.7); will-change: left, opacity; }
 .visit-car::before { position: absolute; left: 22%; top: -16px; width: 48%; height: 20px; content: ""; border-radius: 30px 30px 3px 3px; background: inherit; clip-path: polygon(14% 100%, 27% 8%, 72% 0, 96% 100%); }
 .visit-car::after { position: absolute; right: -4px; top: 13px; width: 8px; height: 8px; content: ""; border-radius: 50%; background: #fff3b0; box-shadow: 12px 1px 18px 9px rgba(255,238,154,.34); }
@@ -322,12 +321,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .visit-car i { left: 15px; }.visit-car b { right: 15px; }
 .visit-car span { position: absolute; left: 34%; top: -11px; width: 29%; height: 14px; clip-path: polygon(11% 100%, 22% 0, 85% 0, 100% 100%); background: linear-gradient(135deg, #748382, #1d2728); }
 .car-plum { background: #75405c; }.car-green { background: #4e5d32; }.car-slate { background: #526064; }
-.car-watch { opacity: 0; animation: car-arrive-watch 36s ease-in-out infinite -9s; }
-.car-watch.watch-one { --watch-start: -72%; --watch-stop: 24%; --watch-end: 124%; }
-.car-watch.watch-two { --watch-start: -52%; --watch-stop: 44%; --watch-end: 144%; }
-.car-watch.watch-three { --watch-start: -32%; --watch-stop: 64%; --watch-end: 164%; }
-.car-through { bottom: 18px; transform: scale(.84) scaleX(-1); animation: car-drive-left 18s linear infinite; }
-.car-through.phase-two { animation-delay: -6s; }.car-through.phase-three { animation-delay: -12s; }
+.car-watch { opacity: 0; }
+.car-through { bottom: 18px; opacity: 0; transform: scale(.84) scaleX(-1); }
 
 .pumpkin-row { position: absolute; z-index: 8; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: space-around; pointer-events: none; }
 .pumpkin-prop { position: relative; width: clamp(48px, 5.2vw, 74px); display: block; flex: 0 0 auto; }
@@ -411,8 +406,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes pumpkin-carving-pulse { 0%, 100% { opacity: .26; filter: brightness(.9) drop-shadow(0 0 2px rgba(255,133,22,.5)); } 48% { opacity: .92; filter: brightness(1.45) drop-shadow(0 0 7px rgba(255,150,35,.95)); } }
 @keyframes visit-ghost-drift { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); opacity: .45; } 46% { transform: translate3d(18px, -15px, 0) rotate(3deg); opacity: .92; } 72% { transform: translate3d(-8px, -6px, 0) rotate(-1deg); opacity: .68; } }
 @keyframes bat-hover { 0%, 100% { transform: translate3d(0,0,0) rotate(8deg) scaleX(1); } 50% { transform: translate3d(18px,-9px,0) rotate(-5deg) scaleX(.78); } }
-@keyframes car-drive-left { from { left: 112%; } to { left: -16%; } }
-@keyframes car-arrive-watch { 0% { left: var(--watch-start); opacity: 0; } 1% { opacity: 1; } 12%, 68% { left: var(--watch-stop); opacity: 1; } 96% { left: var(--watch-end); opacity: 1; } 97%, 100% { left: var(--watch-end); opacity: 0; } }
 @keyframes pulsemesh-wave { to { height: 9px; opacity: .5; } }
 
 @media (max-width: 960px) {

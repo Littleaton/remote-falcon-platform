@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js?v=20261009-pumpkin-glow1';
+import { SITE_CONFIG } from './config.js?v=20261009-traffic4';
 import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
 import { choosePerformer } from './performers.js';
 
@@ -167,6 +167,105 @@ function startFlyingGhost() {
   };
 
   window.setTimeout(flyNextSegment, randomBetween(350, 1400));
+}
+
+function startVisitTraffic() {
+  const throughCars = $$('.car-through');
+  const watchCars = $$('.car-watch');
+  if (!throughCars.length || !watchCars.length || document.documentElement.dataset.season !== 'halloween') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const randomBetween = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
+  const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+  const shuffled = (items) => [...items].sort(() => Math.random() - 0.5);
+  const animateCar = async (car, keyframes, options, finalState) => {
+    if (!car.isConnected) return;
+    const animation = car.animate(keyframes, { ...options, fill: 'forwards' });
+    try {
+      await animation.finished;
+      Object.assign(car.style, finalState);
+    } catch {
+      // Navigation or reduced-motion changes can cancel an in-flight car.
+    } finally {
+      animation.cancel();
+    }
+  };
+
+  const runThroughLane = async () => {
+    let queue = shuffled(throughCars);
+    while (throughCars[0]?.isConnected) {
+      await wait(randomBetween(2600, 8200));
+      if (!queue.length) queue = shuffled(throughCars);
+      const car = queue.shift();
+      car.dataset.trafficState = 'passing';
+      car.style.left = '112%';
+      car.style.opacity = '0';
+      await animateCar(
+        car,
+        [
+          { left: '112%', opacity: 0 },
+          { left: '108%', opacity: 1, offset: 0.035 },
+          { left: '-12%', opacity: 1, offset: 0.965 },
+          { left: '-16%', opacity: 0 }
+        ],
+        { duration: randomBetween(8200, 12600), easing: 'linear' },
+        { left: '-16%', opacity: '0' }
+      );
+      car.dataset.trafficState = 'idle';
+    }
+  };
+
+  const runWatchLane = async () => {
+    let firstCycle = true;
+    while (watchCars[0]?.isConnected) {
+      await wait(firstCycle ? randomBetween(500, 1400) : randomBetween(5200, 12800));
+      firstCycle = false;
+
+      const activeCars = shuffled(watchCars).slice(0, Math.random() < 0.38 ? 2 : 3);
+      const stopPositions = activeCars.length === 3 ? [66, 45, 24] : [57, 32];
+      const laneOffset = randomBetween(-2.5, 2.5);
+      const arrivalDuration = randomBetween(3600, 5200);
+
+      await Promise.all(activeCars.map((car, index) => {
+        const stop = stopPositions[index] + laneOffset;
+        const start = stop - 96;
+        car.dataset.trafficState = 'arriving';
+        car.style.left = `${start}%`;
+        car.style.opacity = '0';
+        return animateCar(
+          car,
+          [
+            { left: `${start}%`, opacity: 0 },
+            { left: `${start + 4}%`, opacity: 1, offset: 0.05 },
+            { left: `${stop}%`, opacity: 1 }
+          ],
+          { duration: arrivalDuration, easing: 'cubic-bezier(.25,.72,.3,1)' },
+          { left: `${stop}%`, opacity: '1' }
+        ).then(() => { car.dataset.trafficState = 'watching'; });
+      }));
+
+      for (let index = 0; index < activeCars.length; index += 1) {
+        const car = activeCars[index];
+        await wait(index === 0 ? randomBetween(9000, 18000) : randomBetween(4200, 9800));
+        car.dataset.trafficState = 'leaving';
+        const start = Number.parseFloat(car.style.left);
+        await animateCar(
+          car,
+          [
+            { left: `${start}%`, opacity: 1 },
+            { left: '112%', opacity: 1, offset: 0.94 },
+            { left: '116%', opacity: 0 }
+          ],
+          { duration: randomBetween(3400, 5200), easing: 'cubic-bezier(.45,0,.55,1)' },
+          { left: '116%', opacity: '0' }
+        );
+        car.dataset.trafficState = 'idle';
+      }
+    }
+  };
+
+  runThroughLane();
+  runWatchLane();
 }
 
 function decodeImage(source) {
@@ -578,6 +677,7 @@ function bindEvents() {
 
 applyConfig();
 startFlyingGhost();
+startVisitTraffic();
 bindEvents();
 revealPerformanceStage();
 refreshShow();
