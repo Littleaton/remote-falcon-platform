@@ -322,8 +322,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .visit-car i { left: 15px; }.visit-car b { right: 15px; }
 .visit-car span { position: absolute; left: 34%; top: -11px; width: 29%; height: 14px; clip-path: polygon(11% 100%, 22% 0, 85% 0, 100% 100%); background: linear-gradient(135deg, #748382, #1d2728); }
 .car-plum { background: #75405c; }.car-green { background: #4e5d32; }.car-slate { background: #526064; }
-.car-watch { opacity: 0; animation: car-arrive-watch 54s ease-in-out infinite; }
-.car-watch.phase-two { animation-delay: -18s; }.car-watch.phase-three { animation-delay: -36s; }
+.car-watch { opacity: 0; animation: car-arrive-watch 36s ease-in-out infinite -9s; }
+.car-watch.watch-one { --watch-start: -72%; --watch-stop: 24%; --watch-end: 124%; }
+.car-watch.watch-two { --watch-start: -52%; --watch-stop: 44%; --watch-end: 144%; }
+.car-watch.watch-three { --watch-start: -32%; --watch-stop: 64%; --watch-end: 164%; }
 .car-through { bottom: 18px; transform: scale(.84) scaleX(-1); animation: car-drive-left 18s linear infinite; }
 .car-through.phase-two { animation-delay: -6s; }.car-through.phase-three { animation-delay: -12s; }
 
@@ -410,7 +412,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes visit-ghost-drift { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); opacity: .45; } 46% { transform: translate3d(18px, -15px, 0) rotate(3deg); opacity: .92; } 72% { transform: translate3d(-8px, -6px, 0) rotate(-1deg); opacity: .68; } }
 @keyframes bat-hover { 0%, 100% { transform: translate3d(0,0,0) rotate(8deg) scaleX(1); } 50% { transform: translate3d(18px,-9px,0) rotate(-5deg) scaleX(.78); } }
 @keyframes car-drive-left { from { left: 112%; } to { left: -16%; } }
-@keyframes car-arrive-watch { 0% { left: -16%; opacity: 0; } 1% { opacity: 1; } 8%, 26% { left: 44%; opacity: 1; } 32% { left: 112%; opacity: 1; } 33%, 100% { left: 112%; opacity: 0; } }
+@keyframes car-arrive-watch { 0% { left: var(--watch-start); opacity: 0; } 1% { opacity: 1; } 12%, 68% { left: var(--watch-stop); opacity: 1; } 96% { left: var(--watch-end); opacity: 1; } 97%, 100% { left: var(--watch-end); opacity: 0; } }
 @keyframes pulsemesh-wave { to { height: 9px; opacity: .5; } }
 
 @media (max-width: 960px) {
