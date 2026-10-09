@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js?v=20261009-visit-scene2';
+import { SITE_CONFIG } from './config.js?v=20261009-pumpkin-glow1';
 import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
 import { choosePerformer } from './performers.js';
 
