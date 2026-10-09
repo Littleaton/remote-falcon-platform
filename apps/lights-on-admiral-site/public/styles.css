@@ -311,9 +311,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .visit-ghost-two { right: 9%; top: 27%; width: clamp(72px, 8vw, 108px); animation: visit-ghost-drift 10.5s ease-in-out infinite -4.2s; }
 .visit-ghost-three { left: 55%; top: 40%; width: clamp(60px, 6.3vw, 86px); animation: visit-ghost-drift 9.4s ease-in-out infinite -6.1s; }
 
-.visit-road { position: absolute; z-index: 6; left: -4%; right: -4%; background: #171e1d; border-top: 1px solid rgba(255,255,255,.12); border-bottom: 1px solid rgba(0,0,0,.8); box-shadow: 0 -10px 25px rgba(0,0,0,.38); }
-.road-back { bottom: 122px; height: 94px; transform: perspective(450px) rotateX(8deg); background: linear-gradient(180deg, #151b19, #0c1110); }
-.road-front { bottom: 0; height: 122px; transform: perspective(420px) rotateX(5deg); background: linear-gradient(180deg, #202826, #101615); }
+.visit-roadway { position: absolute; z-index: 6; left: -5%; right: -5%; bottom: 0; height: 216px; overflow: hidden; transform: perspective(700px) rotateX(3deg); transform-origin: 50% 100%; border-top: 2px solid rgba(205,201,174,.25); border-bottom: 2px solid rgba(5,6,6,.92); background: radial-gradient(circle at 18% 31%, rgba(255,255,255,.08) 0 .7px, transparent 1.5px) 0 0 / 17px 14px, radial-gradient(circle at 72% 68%, rgba(0,0,0,.42) 0 1px, transparent 1.8px) 5px 4px / 23px 19px, linear-gradient(90deg, transparent 0 10%, rgba(0,0,0,.08) 24% 36%, transparent 48% 62%, rgba(255,255,255,.025) 79%, transparent 100%), linear-gradient(180deg, #242827 0%, #191d1c 49%, #121514 100%); box-shadow: 0 -13px 28px rgba(0,0,0,.42), inset 0 10px 22px rgba(255,255,255,.018), inset 0 -16px 24px rgba(0,0,0,.3); }
+.visit-roadway::before { position: absolute; z-index: 0; inset: 0; content: ""; background: linear-gradient(180deg, transparent 7%, rgba(0,0,0,.16) 20%, transparent 34%, transparent 62%, rgba(0,0,0,.2) 78%, transparent 92%), repeating-linear-gradient(97deg, transparent 0 76px, rgba(255,255,255,.016) 77px 78px, transparent 79px 143px); mix-blend-mode: multiply; pointer-events: none; }
+.visit-roadway::after { position: absolute; z-index: 3; inset: 9px 0; content: ""; border-top: 2px solid rgba(202,195,155,.24); border-bottom: 2px solid rgba(202,195,155,.2); pointer-events: none; }
+.traffic-lane { position: absolute; z-index: 2; left: 0; right: 0; height: 50%; }
+.traffic-lane-top { top: 0; }.traffic-lane-bottom { bottom: 0; }
+.road-center-line { position: absolute; z-index: 1; top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%); opacity: .72; background: repeating-linear-gradient(90deg, transparent 0 4.5%, #c9bd79 4.7% 10.5%, transparent 10.7% 15.2%); box-shadow: 0 1px 0 rgba(0,0,0,.52), 0 0 5px rgba(212,199,126,.08); }
 .visit-car { position: absolute; left: -16%; width: clamp(82px, 9vw, 116px); height: 42px; bottom: 21px; border-radius: 23px 28px 10px 10px; background: #525b38; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 8px 12px rgba(0,0,0,.7); will-change: left, opacity; }
 .visit-car::before { position: absolute; left: 22%; top: -16px; width: 48%; height: 20px; content: ""; border-radius: 30px 30px 3px 3px; background: inherit; clip-path: polygon(14% 100%, 27% 8%, 72% 0, 96% 100%); }
 .visit-car::after { position: absolute; right: -4px; top: 13px; width: 8px; height: 8px; content: ""; border-radius: 50%; background: #fff3b0; box-shadow: 12px 1px 18px 9px rgba(255,238,154,.34); }
@@ -462,7 +465,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .visit-house { inset: 10% -18% 37%; background-position: center; }
   .visit-moon { right: 5%; }
   .visit-ghost-one { top: 31%; }.visit-ghost-two { top: 25%; }.visit-ghost-three { top: 39%; }
-  .road-back { bottom: 136px; }.road-front { bottom: 0; }
+  .visit-roadway { height: 230px; }
   .pumpkin-row-back { bottom: 204px; }.pumpkin-row-front { bottom: -3px; }
   .visit-details { min-height: 104px; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; }
   .visit-details .button { grid-column: 1 / -1; justify-self: stretch; text-align: center; }
