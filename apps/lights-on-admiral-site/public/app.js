@@ -1,5 +1,5 @@
-import { SITE_CONFIG } from './config.js?v=20261009-pumpkin-placement1';
-import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
+import { SITE_CONFIG } from './config.js?v=20261009-show-state1';
+import { RemoteFalconError, fetchShow, hasPlaybackActivity, isShowRunning, submitSong } from './api.js?v=20261009-show-state1';
 import { choosePerformer } from './performers.js';
 
 const state = {
@@ -9,8 +9,11 @@ const state = {
   submitting: new Set(),
   pollTimer: null,
   pollDelay: 8000,
-  toastTimer: null
+  toastTimer: null,
+  lastPlaybackAt: 0
 };
+
+let pulseMeshFrame = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -399,10 +402,8 @@ function applyConfig() {
   }
   if (SITE_CONFIG.pulseMeshUrl) {
     const link = $('#pulsemesh-link');
-    link.href = SITE_CONFIG.pulseMeshUrl;
     link.dataset.playerUrl = SITE_CONFIG.pulseMeshUrl;
-    link.target = '_blank';
-    link.rel = 'noreferrer';
+    $('#pulsemesh-fallback').href = SITE_CONFIG.pulseMeshUrl;
   }
 }
 
@@ -426,34 +427,106 @@ function songTitle(song, fallback = '—') {
   return song?.displayName || song?.name || fallback;
 }
 
+function showIsRunning() {
+  return isShowRunning(state.show, { lastPlaybackAt: state.lastPlaybackAt });
+}
+
 function canInteract() {
   const show = state.show;
   return Boolean(
     show &&
-      isHeartbeatFresh(show.lastFppHeartbeat) &&
+      showIsRunning() &&
       show.preferences?.viewerControlEnabled &&
       !show.preferences?.viewerPageViewOnly
   );
 }
 
+function pulseMeshPlayerUrl() {
+  try {
+    const url = new URL($('#pulsemesh-link').dataset.playerUrl || SITE_CONFIG.pulseMeshUrl);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function renderPulseMesh(running) {
+  const button = $('#pulsemesh-link');
+  const dialog = $('#pulsemesh-dialog');
+  const dock = $('#pulsemesh-dock');
+  const loaded = Boolean(pulseMeshFrame);
+
+  button.disabled = !loaded && !running;
+  button.setAttribute('aria-disabled', String(!loaded && !running));
+  button.classList.toggle('is-live', running || loaded);
+  button.textContent = loaded ? 'Reopen show audio ↑' : running ? 'Listen to show audio' : 'Show audio · offline';
+  $('#pulsemesh-note').textContent = loaded
+    ? 'Your PulseMesh player stays loaded when minimized. Reopen it to adjust playback, or Stop to close it.'
+    : running
+      ? 'Opens the player here. Allow location, choose Lights On Admiral, then tap Listen.'
+      : 'Available only while Remote Falcon reports that the show is running. Nothing loads automatically.';
+  dock.hidden = !loaded || dialog.open;
+  document.body.classList.toggle('pulsemesh-active', loaded);
+}
+
+function reopenPulseMesh() {
+  if (!pulseMeshFrame) return;
+  const dialog = $('#pulsemesh-dialog');
+  if (!dialog.open) dialog.showModal();
+  renderPulseMesh(showIsRunning());
+}
+
+function startPulseMesh() {
+  if (pulseMeshFrame) {
+    reopenPulseMesh();
+    return;
+  }
+  if (!showIsRunning()) return;
+
+  const url = pulseMeshPlayerUrl();
+  if (!url) {
+    $('#pulsemesh-note').textContent = 'The PulseMesh player needs a valid secure address. Please use 107.7 FM for now.';
+    return;
+  }
+
+  const frame = document.createElement('iframe');
+  frame.title = 'PulseMesh nearby displays and Lights On Admiral show audio';
+  frame.allow = 'autoplay; geolocation';
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
+  frame.src = url;
+  pulseMeshFrame = frame;
+  $('#pulsemesh-frame-slot').append(frame);
+  reopenPulseMesh();
+}
+
+function minimizePulseMesh() {
+  const dialog = $('#pulsemesh-dialog');
+  if (dialog.open) dialog.close();
+  renderPulseMesh(showIsRunning());
+}
+
+function stopPulseMesh(message = '') {
+  const hadPlayer = Boolean(pulseMeshFrame);
+  pulseMeshFrame?.remove();
+  pulseMeshFrame = null;
+  const dialog = $('#pulsemesh-dialog');
+  if (dialog.open) dialog.close();
+  renderPulseMesh(showIsRunning());
+  if (message && hadPlayer) $('#pulsemesh-note').textContent = message;
+}
+
 function renderStatus() {
   const show = state.show;
   const card = $('#signal-card');
-  const fresh = isHeartbeatFresh(show?.lastFppHeartbeat);
-  card.classList.toggle('is-live', fresh);
+  const running = showIsRunning();
+  card.classList.toggle('is-live', running);
   const header = $('#header-show-status');
-  header.classList.toggle('is-live', fresh);
-  $('#header-status-label').textContent = fresh ? 'Show live' : 'Show offline';
+  header.classList.toggle('is-live', running);
+  $('#header-status-label').textContent = running ? 'Show live' : 'Show offline';
   const pulseMeshCard = $('#pulsemesh-card');
-  const pulseMeshLink = $('#pulsemesh-link');
-  pulseMeshCard.classList.toggle('is-live', fresh);
-  pulseMeshLink.classList.toggle('is-live', fresh);
-  pulseMeshLink.setAttribute('aria-disabled', String(!fresh));
-  pulseMeshLink.tabIndex = fresh ? 0 : -1;
-  pulseMeshLink.textContent = fresh ? 'Listen live with PulseMesh ↗' : 'Show audio · offline';
-  $('#pulsemesh-note').textContent = fresh
-    ? 'The show is live. The player opens only when you choose it.'
-    : 'Available while the show is live. The player opens only when you choose it.';
+  pulseMeshCard.classList.toggle('is-live', running);
+  if (!running && pulseMeshFrame) stopPulseMesh('Remote Falcon reports that the show has stopped, so the phone player was closed.');
+  else renderPulseMesh(running);
 
   if (!show) {
     $('#signal-label').textContent = 'Offline';
@@ -464,12 +537,12 @@ function renderStatus() {
     return;
   }
 
-  $('#signal-label').textContent = fresh ? 'Live now' : 'Offline';
-  $('#status-kicker').textContent = fresh ? 'Now playing' : 'Show status';
-  $('#now-title').textContent = fresh
+  $('#signal-label').textContent = running ? 'Live now' : 'Offline';
+  $('#status-kicker').textContent = running ? 'Now playing' : 'Show status';
+  $('#now-title').textContent = running
     ? songTitle(show.playingNowSequence, show.playingNow || 'Between songs')
     : 'The wings are resting';
-  $('#now-artist').textContent = fresh
+  $('#now-artist').textContent = running
     ? show.playingNowSequence?.artist || 'Live from Lights On Admiral'
     : 'The lights make more sense with the sound turned on.';
   $('#next-title').textContent = songTitle(show.playingNextSequence, show.playingNext || show.playingNextFromSchedule || '—');
@@ -481,7 +554,7 @@ function renderQueue() {
   const list = $('#queue-list');
 
   if (!queue.length) {
-    list.innerHTML = `<li class="queue-empty">${isHeartbeatFresh(state.show?.lastFppHeartbeat) ? 'The light queue is open and ready for the first request.' : 'Requests will line up here once the show is live.'}</li>`;
+    list.innerHTML = `<li class="queue-empty">${showIsRunning() ? 'The light queue is open and ready for the first request.' : 'Requests will line up here once the show is live.'}</li>`;
     return;
   }
 
@@ -520,7 +593,7 @@ function renderSongs() {
     return haystack.includes(state.query);
   });
 
-  const fresh = isHeartbeatFresh(state.show.lastFppHeartbeat);
+  const fresh = showIsRunning();
   $('#song-count').textContent = `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`;
   $('#playlist-status').className = `playlist-status ${fresh ? 'is-live' : 'is-browse'}`;
   $('#playlist-status').innerHTML = `<i></i> ${fresh ? 'Show live' : 'Browse playlist'}`;
@@ -677,6 +750,8 @@ async function refreshShow() {
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
     state.show = await fetchShow(SITE_CONFIG.showSubdomain, { signal: controller.signal });
+    if (hasPlaybackActivity(state.show)) state.lastPlaybackAt = Date.now();
+    else if (state.show?.preferences?.viewerControlEnabled !== true) state.lastPlaybackAt = 0;
     state.pollDelay = 8000;
   } catch (error) {
     state.pollDelay = Math.min(state.pollDelay * 1.8, 60000);
@@ -711,9 +786,16 @@ function bindEvents() {
     $('#site-nav').classList.remove('is-open');
   }));
 
-  $('#pulsemesh-link').addEventListener('click', (event) => {
-    if (event.currentTarget.getAttribute('aria-disabled') === 'true') event.preventDefault();
+  $('#pulsemesh-link').addEventListener('click', startPulseMesh);
+  $('#pulsemesh-reopen').addEventListener('click', reopenPulseMesh);
+  $('#pulsemesh-minimize').addEventListener('click', minimizePulseMesh);
+  $('#pulsemesh-stop').addEventListener('click', () => stopPulseMesh());
+  $('#pulsemesh-dock-stop').addEventListener('click', () => stopPulseMesh());
+  $('#pulsemesh-dialog').addEventListener('cancel', (event) => {
+    event.preventDefault();
+    minimizePulseMesh();
   });
+  $('#pulsemesh-dialog').addEventListener('close', () => renderPulseMesh(showIsRunning()));
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearTimeout(state.pollTimer);

@@ -10,7 +10,7 @@
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/favicon.svg?v=20261009-halloween-header1" type="image/svg+xml" />
     <link rel="preload" href="./assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1" as="image" />
-    <link rel="stylesheet" href="./styles.css?v=20261009-pumpkin-placement1" />
+    <link rel="stylesheet" href="./styles.css?v=20261009-show-state1" />
     <title>Lights On Admiral</title>
   </head>
   <body>
@@ -335,9 +335,34 @@
               <h3>No FM radio? You’re still invited.</h3>
               <p>Listen on your phone with PulseMesh and keep the soundtrack with the lights.</p>
             </div>
-            <a class="pulsemesh-link" id="pulsemesh-link" href="https://player.pulsemesh.io" target="_blank" rel="noreferrer" aria-disabled="true">Show audio · offline</a>
-            <p class="pulsemesh-note" id="pulsemesh-note">Available while the show is live. The player opens only when you choose it.</p>
+            <button class="pulsemesh-link" id="pulsemesh-link" type="button" aria-haspopup="dialog" aria-controls="pulsemesh-dialog" aria-describedby="pulsemesh-note" aria-disabled="true" disabled>Show audio · offline</button>
+            <p class="pulsemesh-note" id="pulsemesh-note">Available only while Remote Falcon reports that the show is running. Nothing loads automatically.</p>
           </div>
+
+          <dialog class="pulsemesh-dialog" id="pulsemesh-dialog" aria-labelledby="pulsemesh-dialog-title" aria-describedby="pulsemesh-dialog-instructions">
+            <header class="pulsemesh-dialog-header">
+              <div>
+                <span>Phone audio · PulseMesh</span>
+                <h2 id="pulsemesh-dialog-title">Listen to the lights.</h2>
+              </div>
+              <div class="pulsemesh-dialog-actions">
+                <button id="pulsemesh-minimize" type="button">Minimize ↓</button>
+                <button id="pulsemesh-stop" type="button">Stop ×</button>
+              </div>
+            </header>
+            <p class="pulsemesh-dialog-instructions" id="pulsemesh-dialog-instructions">Allow location in the player, choose Lights On Admiral, then tap Listen. Minimize keeps this player loaded while you browse.</p>
+            <div class="pulsemesh-frame-slot" id="pulsemesh-frame-slot"></div>
+            <footer class="pulsemesh-dialog-footer">
+              <span>Audio overlaps? Pause in the player or press Stop.</span>
+              <a id="pulsemesh-fallback" href="https://player.pulsemesh.io/" target="_blank" rel="noreferrer">Player not loading? Open separately ↗</a>
+            </footer>
+          </dialog>
+
+          <aside class="pulsemesh-dock" id="pulsemesh-dock" aria-label="PulseMesh player controls" hidden>
+            <span><b>Show audio</b><small>Player loaded · sound controlled in PulseMesh</small></span>
+            <button id="pulsemesh-reopen" type="button">Reopen ↑</button>
+            <button id="pulsemesh-dock-stop" type="button">Stop ×</button>
+          </aside>
         </div>
       </section>
 
@@ -394,6 +419,6 @@
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./app.js?v=20261009-pumpkin-placement1"></script>
+    <script type="module" src="./app.js?v=20261009-show-state1"></script>
   </body>
 </html>

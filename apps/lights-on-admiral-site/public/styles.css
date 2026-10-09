@@ -364,6 +364,26 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .pulsemesh-link.is-live { border-color: rgba(204,235,82,.62); color: #efffa3; background: rgba(194,225,73,.09); }
 .pulsemesh-link.is-live:hover { transform: translateY(-2px); background: rgba(194,225,73,.15); }
 .pulsemesh-note { grid-column: 2 / -1; margin: 0; padding-top: 11px; border-top: 1px solid rgba(255,255,255,.07); color: #747c76; font-size: 9px; }
+.pulsemesh-link, .pulsemesh-dialog button, .pulsemesh-dock button { font: inherit; cursor: pointer; }
+.pulsemesh-dialog { width: min(940px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 32px)); margin: auto; padding: 0; overflow: hidden; border: 1px solid rgba(198,232,77,.55); color: #f2eedc; background: #090c0a; box-shadow: 0 28px 100px rgba(0,0,0,.8), 0 0 42px rgba(145,76,195,.16); }
+.pulsemesh-dialog::backdrop { background: rgba(3,4,3,.82); backdrop-filter: blur(6px); }
+.pulsemesh-dialog[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.pulsemesh-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,.09); background: linear-gradient(110deg, rgba(117,43,164,.16), rgba(189,222,70,.06)); }
+.pulsemesh-dialog-header span { color: #a8b273; text-transform: uppercase; letter-spacing: .18em; font-size: 8px; font-weight: 900; }
+.pulsemesh-dialog-header h2 { margin: 4px 0 0; color: #f2eedc; font: 700 25px/1.05 Georgia, serif; }
+.pulsemesh-dialog-actions { display: flex; gap: 8px; }
+.pulsemesh-dialog-actions button, .pulsemesh-dock button { min-height: 38px; padding: 0 13px; border: 1px solid rgba(159,88,209,.38); color: #e7e1cd; background: rgba(255,255,255,.04); text-transform: uppercase; letter-spacing: .08em; font-size: 9px; font-weight: 900; }
+.pulsemesh-dialog-actions button:hover, .pulsemesh-dock button:hover { border-color: rgba(204,235,82,.62); color: #efffa3; }
+.pulsemesh-dialog-instructions { margin: 0; padding: 10px 20px; color: #adb3ad; background: #0d110e; font-size: 11px; line-height: 1.45; }
+.pulsemesh-frame-slot { min-height: 0; background: #111; }
+.pulsemesh-frame-slot iframe { display: block; width: 100%; height: 100%; min-height: 420px; border: 0; background: #fff; }
+.pulsemesh-dialog-footer { display: flex; justify-content: space-between; gap: 20px; padding: 10px 20px; border-top: 1px solid rgba(255,255,255,.09); color: #7f877f; background: #090c0a; font-size: 9px; }
+.pulsemesh-dialog-footer a { color: #d9ec7d; }
+.pulsemesh-dock { position: fixed; z-index: 90; right: 20px; bottom: 20px; display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid rgba(204,235,82,.52); color: #f2eedc; background: rgba(9,12,10,.96); box-shadow: 0 14px 44px rgba(0,0,0,.56), 0 0 24px rgba(145,76,195,.14); backdrop-filter: blur(12px); }
+.pulsemesh-dock[hidden] { display: none; }
+.pulsemesh-dock > span { display: grid; min-width: 190px; padding: 0 8px; }
+.pulsemesh-dock b { color: #efffa3; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+.pulsemesh-dock small { margin-top: 3px; color: #858c85; font-size: 8px; }
 
 .about-section { padding: 130px 0; display: grid; grid-template-columns: .8fr 1.2fr; gap: 10vw; align-items: center; }
 .about-art { min-height: 460px; position: relative; margin: 0; overflow: hidden; border: 1px solid rgba(240,154,50,.32); background: #050506; box-shadow: 0 30px 70px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.025); }
@@ -480,6 +500,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .pulsemesh-copy h3 { font-size: 18px; }
   .pulsemesh-link { grid-column: 1 / -1; width: 100%; }
   .pulsemesh-note { grid-column: 1 / -1; }
+  .pulsemesh-dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); }
+  .pulsemesh-dialog-header { align-items: flex-start; padding: 14px; }
+  .pulsemesh-dialog-header h2 { font-size: 20px; }
+  .pulsemesh-dialog-actions { flex-direction: column; }
+  .pulsemesh-dialog-actions button { min-height: 34px; }
+  .pulsemesh-dialog-instructions, .pulsemesh-dialog-footer { padding: 9px 14px; }
+  .pulsemesh-dialog-footer { display: grid; gap: 5px; }
+  .pulsemesh-frame-slot iframe { min-height: 360px; }
+  .pulsemesh-dock { right: 8px; bottom: 78px; left: 8px; }
+  .pulsemesh-dock > span { min-width: 0; margin-right: auto; }
   .about-art, .about-art img { min-height: 300px; }
   .about-socials { display: grid; grid-template-columns: 1fr; }
   .social-link { justify-content: flex-start; }

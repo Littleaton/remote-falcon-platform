@@ -168,3 +168,15 @@ export function isHeartbeatFresh(heartbeat, now = Date.now()) {
   const parsed = Date.parse(heartbeat);
   return Number.isFinite(parsed) && now - parsed < 180_000;
 }
+
+export function hasPlaybackActivity(show) {
+  return [show?.playingNow, show?.playingNext, show?.playingNextFromSchedule]
+    .some((value) => typeof value === 'string' && value.trim().length > 0);
+}
+
+export function isShowRunning(show, { now = Date.now(), lastPlaybackAt = 0, graceMs = 45_000 } = {}) {
+  if (!show || !isHeartbeatFresh(show.lastFppHeartbeat, now)) return false;
+  if (show.preferences?.viewerControlEnabled !== true) return false;
+  if (hasPlaybackActivity(show)) return true;
+  return Number.isFinite(lastPlaybackAt) && lastPlaybackAt > 0 && now - lastPlaybackAt < graceMs;
+}

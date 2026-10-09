@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { isHeartbeatFresh, normalizeShow } from '../public/api.js';
+import { hasPlaybackActivity, isHeartbeatFresh, isShowRunning, normalizeShow } from '../public/api.js';
 
 test('normalizeShow filters hidden songs and sorts playlist and queue', () => {
   const show = normalizeShow({
@@ -39,4 +39,40 @@ test('isHeartbeatFresh accepts recent timestamps and rejects stale or invalid va
   assert.equal(isHeartbeatFresh('2026-10-09T11:56:59Z', now), false);
   assert.equal(isHeartbeatFresh(null, now), false);
   assert.equal(isHeartbeatFresh('not-a-date', now), false);
+});
+
+test('hasPlaybackActivity requires a current or upcoming Remote Falcon sequence', () => {
+  assert.equal(hasPlaybackActivity({ playingNow: '', playingNext: '  ', playingNextFromSchedule: '' }), false);
+  assert.equal(hasPlaybackActivity({ playingNow: 'Halloween Overture' }), true);
+  assert.equal(hasPlaybackActivity({ playingNextFromSchedule: 'Ghostbusters' }), true);
+});
+
+test('isShowRunning follows Remote Falcon state instead of show hours', () => {
+  const now = Date.parse('2026-10-09T23:30:00Z');
+  const base = {
+    lastFppHeartbeat: '2026-10-09T23:29:40Z',
+    preferences: { viewerControlEnabled: true },
+    playingNow: 'Halloween Overture',
+    playingNext: '',
+    playingNextFromSchedule: ''
+  };
+
+  assert.equal(isShowRunning(base, { now }), true);
+  assert.equal(isShowRunning({ ...base, playingNow: '' }, { now }), false);
+  assert.equal(isShowRunning({ ...base, preferences: { viewerControlEnabled: false } }, { now }), false);
+  assert.equal(isShowRunning({ ...base, lastFppHeartbeat: '2026-10-09T23:20:00Z' }, { now }), false);
+});
+
+test('isShowRunning keeps short between-song gaps live without masking a stopped show', () => {
+  const now = Date.parse('2026-10-09T23:30:00Z');
+  const betweenSongs = {
+    lastFppHeartbeat: '2026-10-09T23:29:40Z',
+    preferences: { viewerControlEnabled: true },
+    playingNow: '',
+    playingNext: '',
+    playingNextFromSchedule: ''
+  };
+
+  assert.equal(isShowRunning(betweenSongs, { now, lastPlaybackAt: now - 20_000 }), true);
+  assert.equal(isShowRunning(betweenSongs, { now, lastPlaybackAt: now - 50_000 }), false);
 });
