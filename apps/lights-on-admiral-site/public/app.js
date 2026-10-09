@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js';
+import { SITE_CONFIG } from './config.js?v=20261009-visit-scene2';
 import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
 import { choosePerformer } from './performers.js';
 
@@ -16,7 +16,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const SPRITE_ASSETS = {
-  admiral: './assets/admiral-conductor-sprite-16-clean-v2.png',
+  admiral: './assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1',
   death: './assets/death-singer-sprite-16-clean-v2.png',
   pumpkin: './assets/pumpkin-singer-sprite-16-clean-v2.png',
   phantom: './assets/phantom-singer-sprite-16-clean-v2.png'
@@ -60,29 +60,113 @@ function randomizePerformanceTiming() {
   root.style.setProperty('--death-wing-duration', seconds(11, 5));
   root.style.setProperty('--admiral-wing-delay', negativeSeconds(10));
   root.style.setProperty('--death-wing-delay', negativeSeconds(12));
-  root.style.setProperty('--conductor-gesture-delay', negativeSeconds(5));
-  root.style.setProperty('--singer-gesture-delay', negativeSeconds(4));
-  root.style.setProperty('--admiral-sprite-duration', seconds(7.8, 1.4));
-  root.style.setProperty('--death-sprite-duration', seconds(9.2, 1.8));
-  root.style.setProperty('--pumpkin-sprite-duration', seconds(8.8, 1.6));
-  root.style.setProperty('--phantom-sprite-duration', seconds(10, 2));
-  root.style.setProperty('--admiral-sprite-delay', negativeSeconds(5));
-  root.style.setProperty('--death-sprite-delay', negativeSeconds(6));
-  root.style.setProperty('--pumpkin-sprite-delay', negativeSeconds(5));
-  root.style.setProperty('--phantom-sprite-delay', negativeSeconds(7));
+}
 
-  $$('.character-sprite').forEach((sprite) => {
-    const frames = [...sprite.querySelectorAll('.sprite-frame')];
-    const styles = getComputedStyle(sprite);
-    const duration = Number.parseFloat(styles.getPropertyValue('--sprite-duration')) || 4;
-    const baseDelay = Number.parseFloat(styles.getPropertyValue('--sprite-delay')) || 0;
-    const frameStep = duration / frames.length;
+function startFlyingGhost() {
+  const ghost = $('.flying-ghost');
+  if (!ghost || document.documentElement.dataset.season !== 'halloween') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    frames.forEach((frame, index) => {
-      const wrappedOffset = index === 0 ? 0 : (frames.length - index) * frameStep;
-      frame.style.animationDelay = `${(baseDelay - wrappedOffset).toFixed(4)}s`;
-    });
-  });
+  const randomBetween = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
+  const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+  const ghostWidth = () => ghost.getBoundingClientRect().width || 180;
+  const safeBounds = () => {
+    const width = ghostWidth();
+    return {
+      minX: -width * 0.35,
+      maxX: Math.max(80, window.innerWidth - width * 0.65),
+      minY: Math.max(70, window.innerHeight * 0.08),
+      maxY: Math.max(180, window.innerHeight - width * 0.72 - 120)
+    };
+  };
+
+  const bounds = safeBounds();
+  let position = {
+    x: randomBetween(bounds.minX, bounds.maxX * 0.28),
+    y: randomBetween(bounds.minY, bounds.maxY),
+    scale: randomBetween(0.72, 0.94),
+    direction: 1,
+    rotation: randomBetween(-4, 4)
+  };
+
+  const transformFor = (point) =>
+    `translate3d(${point.x.toFixed(1)}px, ${point.y.toFixed(1)}px, 0) scale(${point.scale.toFixed(3)}) scaleX(${point.direction}) rotate(${point.rotation.toFixed(2)}deg)`;
+
+  ghost.style.transform = transformFor(position);
+  ghost.style.opacity = '0';
+
+  const flyNextSegment = () => {
+    if (!ghost.isConnected) return;
+    const nextBounds = safeBounds();
+    position.x = clamp(position.x, nextBounds.minX, nextBounds.maxX);
+    position.y = clamp(position.y, nextBounds.minY, nextBounds.maxY);
+
+    let targetX = randomBetween(nextBounds.minX, nextBounds.maxX);
+    let attempts = 0;
+    while (Math.abs(targetX - position.x) < window.innerWidth * 0.24 && attempts < 8) {
+      targetX = randomBetween(nextBounds.minX, nextBounds.maxX);
+      attempts += 1;
+    }
+
+    const targetY = randomBetween(nextBounds.minY, nextBounds.maxY);
+    const direction = targetX >= position.x ? 1 : -1;
+    const target = {
+      x: targetX,
+      y: targetY,
+      scale: randomBetween(0.68, 1.02),
+      direction,
+      rotation: randomBetween(-5, 5)
+    };
+    const arc = randomBetween(-Math.min(105, window.innerHeight * 0.12), Math.min(105, window.innerHeight * 0.12));
+    const midpoint = {
+      x: position.x + (target.x - position.x) * randomBetween(0.42, 0.58),
+      y: clamp((position.y + target.y) / 2 + arc, nextBounds.minY, nextBounds.maxY),
+      scale: (position.scale + target.scale) / 2 + randomBetween(-0.035, 0.035),
+      direction,
+      rotation: randomBetween(-6, 6)
+    };
+    const duration = randomBetween(7600, 13200);
+    const cruisingOpacity = randomBetween(0.42, 0.64);
+
+    ghost.dataset.flightDirection = direction === 1 ? 'right' : 'left';
+    ghost.dataset.flightTargetY = Math.round(target.y).toString();
+
+    const keyframes = [
+      { transform: transformFor(position), opacity: Number.parseFloat(ghost.style.opacity) || 0 }
+    ];
+    if (direction !== position.direction) {
+      keyframes.push({
+        transform: transformFor({
+          x: position.x + (target.x - position.x) * 0.08,
+          y: position.y + (target.y - position.y) * 0.06,
+          scale: position.scale * 0.96,
+          direction,
+          rotation: midpoint.rotation * 0.45
+        }),
+        opacity: cruisingOpacity * 0.82,
+        offset: 0.1
+      });
+    }
+    keyframes.push(
+      { transform: transformFor(midpoint), opacity: cruisingOpacity, offset: 0.52 },
+      { transform: transformFor(target), opacity: randomBetween(0.3, 0.56) }
+    );
+
+    const animation = ghost.animate(
+      keyframes,
+      { duration, easing: 'cubic-bezier(.42, .05, .58, .95)', fill: 'forwards' }
+    );
+
+    animation.finished.then(() => {
+      position = target;
+      ghost.style.transform = transformFor(position);
+      ghost.style.opacity = getComputedStyle(ghost).opacity;
+      animation.cancel();
+      window.setTimeout(flyNextSegment, randomBetween(250, 1100));
+    }).catch(() => {});
+  };
+
+  window.setTimeout(flyNextSegment, randomBetween(350, 1400));
 }
 
 function decodeImage(source) {
@@ -151,8 +235,15 @@ function applyConfig() {
     link.rel = 'noreferrer';
   }
 
-  if (SITE_CONFIG.fmFrequency) $('#frequency').textContent = `${SITE_CONFIG.fmFrequency} FM`;
-  if (SITE_CONFIG.showHours.length) $('#show-hours').textContent = SITE_CONFIG.showHours.join(' · ');
+  if (SITE_CONFIG.fmFrequency) {
+    $('#visit-frequency').textContent = `${SITE_CONFIG.fmFrequency} FM`;
+    $('#status-frequency').textContent = SITE_CONFIG.fmFrequency;
+  }
+  if (SITE_CONFIG.showHours.length) {
+    $('#show-hours').textContent = SITE_CONFIG.showHours.join(' · ');
+    $('#status-hours').textContent = SITE_CONFIG.showHours.slice(1).join(' · ') || SITE_CONFIG.showHours[0];
+  }
+  if (SITE_CONFIG.lastNight) $('#last-night').textContent = SITE_CONFIG.lastNight;
   if (SITE_CONFIG.directionsUrl) {
     const link = $('#directions-link');
     link.href = SITE_CONFIG.directionsUrl;
@@ -160,6 +251,13 @@ function applyConfig() {
     link.target = '_blank';
     link.rel = 'noreferrer';
     link.classList.remove('is-hidden');
+  }
+  if (SITE_CONFIG.pulseMeshUrl) {
+    const link = $('#pulsemesh-link');
+    link.href = SITE_CONFIG.pulseMeshUrl;
+    link.dataset.playerUrl = SITE_CONFIG.pulseMeshUrl;
+    link.target = '_blank';
+    link.rel = 'noreferrer';
   }
 }
 
@@ -198,18 +296,37 @@ function renderStatus() {
   const card = $('#signal-card');
   const fresh = isHeartbeatFresh(show?.lastFppHeartbeat);
   card.classList.toggle('is-live', fresh);
+  const header = $('#header-show-status');
+  header.classList.toggle('is-live', fresh);
+  $('#header-status-label').textContent = fresh ? 'Show live' : 'Show offline';
+  const pulseMeshCard = $('#pulsemesh-card');
+  const pulseMeshLink = $('#pulsemesh-link');
+  pulseMeshCard.classList.toggle('is-live', fresh);
+  pulseMeshLink.classList.toggle('is-live', fresh);
+  pulseMeshLink.setAttribute('aria-disabled', String(!fresh));
+  pulseMeshLink.tabIndex = fresh ? 0 : -1;
+  pulseMeshLink.textContent = fresh ? 'Listen live with PulseMesh ↗' : 'Show audio · offline';
+  $('#pulsemesh-note').textContent = fresh
+    ? 'The show is live. The player opens only when you choose it.'
+    : 'Available while the show is live. The player opens only when you choose it.';
 
   if (!show) {
-    $('#signal-label').textContent = 'Show signal unavailable';
+    $('#signal-label').textContent = 'Offline';
+    $('#status-kicker').textContent = 'Show status';
     $('#now-title').textContent = 'The wings are resting';
-    $('#now-artist').textContent = 'Check back soon for the live playlist.';
+    $('#now-artist').textContent = 'The lights make more sense with the sound turned on.';
     $('#next-title').textContent = '—';
     return;
   }
 
-  $('#signal-label').textContent = fresh ? 'Show signal live' : 'Preparing for show night';
-  $('#now-title').textContent = songTitle(show.playingNowSequence, show.playingNow || (fresh ? 'Between songs' : 'Tuning the lights'));
-  $('#now-artist').textContent = show.playingNowSequence?.artist || (fresh ? 'Live from Lights On Admiral' : 'The live track appears here when the controller comes online.');
+  $('#signal-label').textContent = fresh ? 'Live now' : 'Offline';
+  $('#status-kicker').textContent = fresh ? 'Now playing' : 'Show status';
+  $('#now-title').textContent = fresh
+    ? songTitle(show.playingNowSequence, show.playingNow || 'Between songs')
+    : 'The wings are resting';
+  $('#now-artist').textContent = fresh
+    ? show.playingNowSequence?.artist || 'Live from Lights On Admiral'
+    : 'The lights make more sense with the sound turned on.';
   $('#next-title').textContent = songTitle(show.playingNextSequence, show.playingNext || show.playingNextFromSchedule || '—');
 }
 
@@ -219,7 +336,7 @@ function renderQueue() {
   const list = $('#queue-list');
 
   if (!queue.length) {
-    list.innerHTML = '<li class="queue-empty">Requests will line up here once the show is live.</li>';
+    list.innerHTML = `<li class="queue-empty">${isHeartbeatFresh(state.show?.lastFppHeartbeat) ? 'The light queue is open and ready for the first request.' : 'Requests will line up here once the show is live.'}</li>`;
     return;
   }
 
@@ -248,6 +365,8 @@ function renderSongs() {
   if (!state.show) {
     grid.innerHTML = `<div class="empty-state"><h3>The playlist is taking a quick intermission.</h3><p>We couldn't reach the show controller. Refresh in a moment or enjoy past shows on YouTube.</p></div>`;
     $('#song-count').textContent = 'Signal unavailable';
+    $('#playlist-status').className = 'playlist-status is-offline';
+    $('#playlist-status').innerHTML = '<i></i> Signal unavailable';
     return;
   }
 
@@ -256,7 +375,10 @@ function renderSongs() {
     return haystack.includes(state.query);
   });
 
+  const fresh = isHeartbeatFresh(state.show.lastFppHeartbeat);
   $('#song-count').textContent = `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`;
+  $('#playlist-status').className = `playlist-status ${fresh ? 'is-live' : 'is-browse'}`;
+  $('#playlist-status').innerHTML = `<i></i> ${fresh ? 'Show live' : 'Browse playlist'}`;
   const mode = state.show.preferences?.viewerControlMode || 'JUKEBOX';
   const interactionReady = canInteract();
   $('#song-instructions').textContent = interactionReady
@@ -444,6 +566,10 @@ function bindEvents() {
     $('#site-nav').classList.remove('is-open');
   }));
 
+  $('#pulsemesh-link').addEventListener('click', (event) => {
+    if (event.currentTarget.getAttribute('aria-disabled') === 'true') event.preventDefault();
+  });
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearTimeout(state.pollTimer);
     else refreshShow();
@@ -451,6 +577,7 @@ function bindEvents() {
 }
 
 applyConfig();
+startFlyingGhost();
 bindEvents();
 revealPerformanceStage();
 refreshShow();

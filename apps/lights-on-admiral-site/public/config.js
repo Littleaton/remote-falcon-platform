@@ -1,15 +1,15 @@
 export const SITE_CONFIG = {
   showSubdomain: 'lightsonadmiral',
   showName: 'Lights On Admiral',
-  locationLabel: 'West Jordan, Utah',
+  locationLabel: 'Herriman, UT',
   youtubeUrl: 'https://www.youtube.com/@lightsonadmiral',
 
-  // Fill these in when the season schedule and radio frequency are final.
-  // Leaving them blank renders honest "coming soon" copy instead of a guess.
-  fmFrequency: '',
-  showHours: [],
-  directionsUrl: '',
-  directionsLabel: 'Directions available during show season',
+  fmFrequency: '107.7',
+  showHours: ['Nightly', '5:00–10:30 PM'],
+  lastNight: 'October 31',
+  directionsUrl: 'https://maps.app.goo.gl/JAw98A9neYv97QPk9',
+  directionsLabel: 'Get directions',
+  pulseMeshUrl: 'https://player.pulsemesh.io',
 
   performers: {
     pumpkin: {
@@ -41,7 +41,7 @@ export const SITE_CONFIG = {
       eyebrow: 'Halloween light show · 2026',
       headline: 'Lights On Admiral',
       summary: 'The Admiral conducts. Tonight’s performer is waiting in the wings.',
-      dateRange: 'September 15 – November 1'
+      dateRange: 'October 1 – 31'
     },
     veterans: {
       label: 'Veterans Day tribute',

@@ -22,6 +22,17 @@ test('normalizeShow filters hidden songs and sorts playlist and queue', () => {
   assert.equal(show.votes.get('early'), 3);
 });
 
+test('normalizeShow falls back to the sequence index when order is absent', () => {
+  const show = normalizeShow({
+    sequences: [
+      { name: 'third', active: true, visible: true, index: 3 },
+      { name: 'first', active: true, visible: true, index: 1 }
+    ]
+  });
+
+  assert.deepEqual(show.sequences.map((song) => song.name), ['first', 'third']);
+});
+
 test('isHeartbeatFresh accepts recent timestamps and rejects stale or invalid values', () => {
   const now = Date.parse('2026-10-09T12:00:00Z');
   assert.equal(isHeartbeatFresh('2026-10-09T11:58:01Z', now), true);

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080b10" />
+    <meta name="theme-color" content="#100912" />
     <meta name="description" content="Lights On Admiral — an interactive neighborhood light show in West Jordan, Utah." />
     <meta property="og:title" content="Lights On Admiral" />
     <meta property="og:description" content="Pick a song and watch the neighborhood light up." />
     <meta property="og:type" content="website" />
-    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href="./assets/admiral-conductor-sprite-16-clean-v2.png" as="image" />
-    <link rel="stylesheet" href="./styles.css?v=20261009-driveway1" />
+    <link rel="icon" href="./assets/favicon.svg?v=20261009-halloween-header1" type="image/svg+xml" />
+    <link rel="preload" href="./assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1" as="image" />
+    <link rel="stylesheet" href="./styles.css?v=20261009-visit-scene2" />
     <title>Lights On Admiral</title>
   </head>
   <body>
@@ -24,32 +24,43 @@
       <svg class="corner-web web-right" viewBox="0 0 180 180">
         <path d="M0 0h180M0 0v180M0 0l180 180M0 0c50 8 92 38 122 73M0 0c12 54 38 94 78 122M45 0c-3 22 3 43 18 61M0 45c22-3 43 3 61 18M90 0c-5 44 10 80 43 108M0 90c44-5 80 10 108 43" />
       </svg>
-      <img class="flying-ghost ghost-one" src="./assets/flying-ghost.png" alt="" />
+      <img class="flying-ghost ghost-one" src="./assets/halloween-ghost-cartoon-v1.png" alt="" />
     </div>
 
     <header class="site-header" id="top">
       <a class="brand" href="#top" aria-label="Lights On Admiral home">
         <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 88 56" role="img">
-            <path class="wing wing-left" d="M40 29C29 3 3 4 6 27c2 15 14 24 31 23l3-21Z" />
-            <path class="wing wing-right" d="M48 29C59 3 85 4 82 27c-2 15-14 24-31 23l-3-21Z" />
-            <path class="band" d="M36 23C28 10 15 11 13 24c9-3 17 0 24 6l-1-7Zm16 0c8-13 21-12 23 1-9-3-17 0-24 6l1-7Z" />
-            <path class="body" d="M41 14h6l4 38H37l4-38Z" />
-            <circle class="body" cx="44" cy="10" r="5" />
-            <circle class="light light-one" cx="18" cy="35" r="2.5" />
-            <circle class="light light-two" cx="70" cy="35" r="2.5" />
-          </svg>
+          <img src="./assets/loa-halloween-crest.svg" alt="" />
         </span>
-        <span class="brand-type"><strong>LIGHTS</strong><span>ON ADMIRAL</span></span>
+        <span class="brand-type">
+          <span class="brand-kicker">Halloween Light Show</span>
+          <strong>Lights <em>On Admiral</em></strong>
+        </span>
       </a>
 
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
         <span></span><span></span><span></span><span class="sr-only">Open menu</span>
       </button>
+      <div class="header-show-status" id="header-show-status" aria-live="polite">
+        <i aria-hidden="true"></i><span id="header-status-label">Checking show</span>
+      </div>
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
-        <a href="#songs">Songs</a>
-        <a href="#visit">Visit</a>
-        <a href="#about">About</a>
+        <a href="#songs">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+          <span>Songs</span>
+        </a>
+        <a href="#visit">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 6.5 5-2.5 7 2.5 5-2.5v13.5l-5 2.5-7-2.5-5 2.5Z"/><path d="M8.5 4v13.5M15.5 6.5V20"/><path d="M12 9.2a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg>
+          <span>Visit</span>
+        </a>
+        <a href="#about">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20 7v5.2c0 4.5-3.2 7.1-8 8.8-4.8-1.7-8-4.3-8-8.8V7Z"/><circle cx="12" cy="9" r="1"/><path d="M12 12v5"/></svg>
+          <span>About</span>
+        </a>
+        <a class="nav-youtube" data-youtube href="#">
+          <svg class="nav-icon nav-icon-youtube" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 6.2a2.8 2.8 0 0 0-2-2C17.5 3.7 12 3.7 12 3.7s-5.5 0-7.3.5a2.8 2.8 0 0 0-2 2A29 29 0 0 0 2.2 12a29 29 0 0 0 .5 5.8 2.8 2.8 0 0 0 2 2c1.8.5 7.3.5 7.3.5s5.5 0 7.3-.5a2.8 2.8 0 0 0 2-2 29 29 0 0 0 .5-5.8 29 29 0 0 0-.5-5.8ZM10 15.6V8.4l6.2 3.6-6.2 3.6Z"/></svg>
+          <span>YouTube</span><span class="nav-external" aria-hidden="true">↗</span>
+        </a>
       </nav>
     </header>
 
@@ -69,54 +80,26 @@
           <div class="character admiral-character" aria-hidden="true">
             <img class="character-wings admiral-wings" src="./assets/admiral-wings-red.png" alt="" />
             <div class="character-sprite admiral-sprite">
-              <span class="sprite-frame sprite-frame-1"></span><span class="sprite-frame sprite-frame-2"></span>
-              <span class="sprite-frame sprite-frame-3"></span><span class="sprite-frame sprite-frame-4"></span>
-              <span class="sprite-frame sprite-frame-5"></span><span class="sprite-frame sprite-frame-6"></span>
-              <span class="sprite-frame sprite-frame-7"></span><span class="sprite-frame sprite-frame-8"></span>
-              <span class="sprite-frame sprite-frame-9"></span><span class="sprite-frame sprite-frame-10"></span>
-              <span class="sprite-frame sprite-frame-11"></span><span class="sprite-frame sprite-frame-12"></span>
-              <span class="sprite-frame sprite-frame-13"></span><span class="sprite-frame sprite-frame-14"></span>
-              <span class="sprite-frame sprite-frame-15"></span><span class="sprite-frame sprite-frame-16"></span>
+              <span class="sprite-frame sprite-frame-1"></span>
             </div>
           </div>
 
           <div class="character performer-character performer-death" data-performer-panel="death" aria-hidden="true">
             <img class="character-wings death-wings" src="./assets/death-wings.png" alt="" />
             <div class="character-sprite death-sprite">
-              <span class="sprite-frame sprite-frame-1"></span><span class="sprite-frame sprite-frame-2"></span>
-              <span class="sprite-frame sprite-frame-3"></span><span class="sprite-frame sprite-frame-4"></span>
-              <span class="sprite-frame sprite-frame-5"></span><span class="sprite-frame sprite-frame-6"></span>
-              <span class="sprite-frame sprite-frame-7"></span><span class="sprite-frame sprite-frame-8"></span>
-              <span class="sprite-frame sprite-frame-9"></span><span class="sprite-frame sprite-frame-10"></span>
-              <span class="sprite-frame sprite-frame-11"></span><span class="sprite-frame sprite-frame-12"></span>
-              <span class="sprite-frame sprite-frame-13"></span><span class="sprite-frame sprite-frame-14"></span>
-              <span class="sprite-frame sprite-frame-15"></span><span class="sprite-frame sprite-frame-16"></span>
+              <span class="sprite-frame sprite-frame-1"></span>
             </div>
           </div>
 
           <div class="character performer-character performer-pumpkin" data-performer-panel="pumpkin" aria-hidden="true">
             <div class="character-sprite pumpkin-sprite">
-              <span class="sprite-frame sprite-frame-1"></span><span class="sprite-frame sprite-frame-2"></span>
-              <span class="sprite-frame sprite-frame-3"></span><span class="sprite-frame sprite-frame-4"></span>
-              <span class="sprite-frame sprite-frame-5"></span><span class="sprite-frame sprite-frame-6"></span>
-              <span class="sprite-frame sprite-frame-7"></span><span class="sprite-frame sprite-frame-8"></span>
-              <span class="sprite-frame sprite-frame-9"></span><span class="sprite-frame sprite-frame-10"></span>
-              <span class="sprite-frame sprite-frame-11"></span><span class="sprite-frame sprite-frame-12"></span>
-              <span class="sprite-frame sprite-frame-13"></span><span class="sprite-frame sprite-frame-14"></span>
-              <span class="sprite-frame sprite-frame-15"></span><span class="sprite-frame sprite-frame-16"></span>
+              <span class="sprite-frame sprite-frame-1"></span>
             </div>
           </div>
 
           <div class="character performer-character performer-phantom" data-performer-panel="phantom" aria-hidden="true">
             <div class="character-sprite phantom-sprite">
-              <span class="sprite-frame sprite-frame-1"></span><span class="sprite-frame sprite-frame-2"></span>
-              <span class="sprite-frame sprite-frame-3"></span><span class="sprite-frame sprite-frame-4"></span>
-              <span class="sprite-frame sprite-frame-5"></span><span class="sprite-frame sprite-frame-6"></span>
-              <span class="sprite-frame sprite-frame-7"></span><span class="sprite-frame sprite-frame-8"></span>
-              <span class="sprite-frame sprite-frame-9"></span><span class="sprite-frame sprite-frame-10"></span>
-              <span class="sprite-frame sprite-frame-11"></span><span class="sprite-frame sprite-frame-12"></span>
-              <span class="sprite-frame sprite-frame-13"></span><span class="sprite-frame sprite-frame-14"></span>
-              <span class="sprite-frame sprite-frame-15"></span><span class="sprite-frame sprite-frame-16"></span>
+              <span class="sprite-frame sprite-frame-1"></span>
             </div>
           </div>
 
@@ -157,27 +140,33 @@
         <div class="hero-meta">
           <span id="season-label">Halloween lights</span>
           <span aria-hidden="true">•</span>
-          <span id="location-label">West Jordan, Utah</span>
+          <span id="location-label">Herriman, UT</span>
           <span aria-hidden="true">•</span>
-          <span id="season-range">September 15 – November 1</span>
+          <span id="season-range">October 1 – 31</span>
         </div>
       </section>
 
-      <section class="now-playing shell" aria-labelledby="now-title">
-        <div class="section-kicker"><span>01</span> Live signal</div>
+      <section class="now-playing shell" aria-labelledby="show-status-title">
+        <h2 class="sr-only" id="show-status-title">Tonight’s show status</h2>
         <div class="signal-card" id="signal-card">
-          <div class="signal-status">
-            <span class="signal-dot"></span>
+          <div class="signal-status-block">
+            <span class="signal-beacon" aria-hidden="true"><i></i></span>
             <span id="signal-label">Checking the show signal…</span>
           </div>
-          <div class="now-copy">
-            <p>Now playing</p>
-            <h2 id="now-title">Tuning the lights</h2>
-            <span id="now-artist">We’ll have tonight’s track here when the show goes live.</span>
+          <div class="status-station">
+            <p>Tune your car radio to</p>
+            <strong><span id="status-frequency">107.7</span> <small>FM</small></strong>
           </div>
-          <div class="next-copy">
-            <p>Up next</p>
-            <strong id="next-title">—</strong>
+          <div class="status-hours">
+            <p>Tonight’s hours</p>
+            <strong id="status-hours">5:00–10:30 PM</strong>
+            <span>Nightly through October 31</span>
+          </div>
+          <div class="now-copy">
+            <p id="status-kicker">Show status</p>
+            <strong id="now-title">Tuning the lights</strong>
+            <span id="now-artist">We’ll have tonight’s track here when the show goes live.</span>
+            <span class="next-copy">Up next <b id="next-title">—</b></span>
           </div>
           <div class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
@@ -198,7 +187,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
             <input id="song-search" type="search" placeholder="Search songs or artists" autocomplete="off" />
           </label>
-          <span class="song-count" id="song-count">Loading playlist…</span>
+          <div class="playlist-state">
+            <span class="playlist-status" id="playlist-status"><i></i> Finding the show</span>
+            <span class="song-count" id="song-count">Loading playlist…</span>
+          </div>
         </div>
 
         <div class="song-layout">
@@ -220,41 +212,169 @@
       </section>
 
       <section class="visit-section" id="visit" aria-labelledby="visit-title">
-        <div class="shell visit-grid">
-          <div class="visit-copy">
-            <div class="section-kicker"><span>03</span> Visit the show</div>
-            <h2 id="visit-title">Park. Tune in.<br />Watch the wings glow.</h2>
-            <p>Lights On Admiral is a neighborhood display. Please keep headlights low, music on the car radio, and driveways clear so everyone gets a good view.</p>
-            <a class="button button-outline is-hidden" id="directions-link" href="#">Get directions <span aria-hidden="true">↗</span></a>
+        <div class="shell visit-intro">
+          <div class="section-kicker"><span>03</span> Your night at the show</div>
+          <h2 id="visit-title">Follow the glow.</h2>
+          <p>Bring your favorite people, tune to <strong id="visit-frequency">107.7 FM</strong>, and let the lights take it from there.</p>
+        </div>
+
+        <div class="shell visit-night">
+          <p class="sr-only">Cars arrive at the Lights On Admiral Halloween show while house lights shimmer, pumpkins glow, and ghosts drift through the night.</p>
+          <div class="visit-sky" aria-hidden="true">
+            <span class="visit-moon"></span>
+            <span class="visit-bat bat-one">⌁</span>
+            <span class="visit-bat bat-two">⌁</span>
           </div>
-          <div class="visit-cards">
-            <article>
-              <span class="card-number">A</span>
-              <p>Tune your radio</p>
-              <strong id="frequency">Frequency posted before opening night</strong>
+          <div class="visit-house" aria-hidden="true">
+            <div class="house-light light-one"></div><div class="house-light light-two"></div><div class="house-light light-three"></div>
+            <div class="house-light light-four"></div><div class="house-light light-five"></div><div class="house-light light-six"></div>
+            <div class="house-light light-seven"></div><div class="house-light light-eight"></div><div class="house-light light-nine"></div>
+          </div>
+          <img class="visit-ghost visit-ghost-one" src="./assets/halloween-ghost-cartoon-v1.png" alt="" aria-hidden="true" />
+          <img class="visit-ghost visit-ghost-two" src="./assets/halloween-ghost-cartoon-v1.png" alt="" aria-hidden="true" />
+          <img class="visit-ghost visit-ghost-three" src="./assets/halloween-ghost-cartoon-v1.png" alt="" aria-hidden="true" />
+
+          <div class="pumpkin-row pumpkin-row-back" aria-hidden="true">
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+          </div>
+          <div class="visit-road road-back" aria-hidden="true">
+            <div class="visit-car car-back car-plum"><i></i><b></b><span></span></div>
+          </div>
+          <div class="visit-road road-front" aria-hidden="true">
+            <div class="road-dashes"></div>
+            <div class="visit-car car-front car-green"><i></i><b></b><span></span></div>
+            <div class="visit-car car-front car-slate"><i></i><b></b><span></span></div>
+            <div class="visit-car car-front car-plum car-delay"><i></i><b></b><span></span></div>
+          </div>
+          <div class="pumpkin-row pumpkin-row-front" aria-hidden="true">
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+            <img src="./assets/halloween-pumpkin-realistic-v1.png" alt="" />
+          </div>
+        </div>
+
+        <div class="shell visit-details">
+          <div class="visit-detail">
+            <span>Show hours</span>
+            <strong id="show-hours">Nightly · 5:00–10:30 PM</strong>
+          </div>
+          <div class="visit-detail">
+            <span>Last night</span>
+            <strong id="last-night">October 31</strong>
+          </div>
+          <a class="button button-primary" id="directions-link" href="https://maps.app.goo.gl/JAw98A9neYv97QPk9" target="_blank" rel="noreferrer">Get directions <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="shell visit-guide" id="visit-guide">
+          <div class="visit-guide-heading">
+            <div>
+              <span>Before the first beat</span>
+              <h3>A few friendly reminders.</h3>
+            </div>
+            <p>Small courtesies keep the street safe, the neighbors happy, and the glow fun for everyone.</p>
+          </div>
+
+          <div class="courtesy-grid">
+            <article class="courtesy-card courtesy-clear">
+              <div class="courtesy-icon" aria-hidden="true">
+                <svg viewBox="0 0 96 72">
+                  <path class="icon-road" d="M7 61 25 12h46l18 49" />
+                  <path class="icon-dash" d="M48 17v9m0 9v9m0 9v7" />
+                  <path class="icon-curb" d="M10 57h22m32 0h22" />
+                  <path class="icon-house" d="m63 21 12-9 13 9v17H65V20" />
+                  <path class="icon-house" d="M74 38V27h6v11" />
+                </svg>
+              </div>
+              <div><strong>Leave room to roll</strong><p>Keep driveways, mailboxes, and the roadway clear so neighbors can come and go.</p></div>
             </article>
-            <article>
-              <span class="card-number">B</span>
-              <p>Show hours</p>
-              <strong id="show-hours">2026 schedule coming soon</strong>
+
+            <article class="courtesy-card courtesy-dark">
+              <div class="courtesy-icon" aria-hidden="true">
+                <svg viewBox="0 0 96 72">
+                  <path class="icon-car" d="M18 49h60l-5-17-13-9H36l-13 9-5 17Z" />
+                  <path class="icon-window" d="m31 33 9-7h16l9 7H31Z" />
+                  <circle class="icon-wheel" cx="31" cy="51" r="6" /><circle class="icon-wheel" cx="65" cy="51" r="6" />
+                  <path class="icon-light" d="M17 38 6 33m73 5 11-5" />
+                  <path class="icon-spark" d="M47 12V5m-8 10-5-5m21 5 5-5" />
+                </svg>
+              </div>
+              <div><strong>Go dark while parked</strong><p>Switch off your headlights once you settle in. Use parking lights only when needed for safety.</p></div>
             </article>
-            <article>
-              <span class="card-number">C</span>
-              <p>Neighborhood courtesy</p>
-              <strong>Stay in your vehicle and keep driveways open</strong>
+
+            <article class="courtesy-card courtesy-radio">
+              <div class="courtesy-icon" aria-hidden="true">
+                <svg viewBox="0 0 96 72">
+                  <rect class="icon-radio" x="16" y="21" width="64" height="39" rx="5" />
+                  <path class="icon-antenna" d="m67 21 8-15" />
+                  <circle class="icon-dial" cx="65" cy="41" r="9" />
+                  <path class="icon-speaker" d="M26 34h22m-22 7h22m-22 7h22" />
+                  <path class="icon-wave" d="M8 31c-4 6-4 14 0 20M88 31c4 6 4 14 0 20" />
+                </svg>
+              </div>
+              <div><strong>Keep it neighborly</strong><p>Stay with your vehicle and enjoy the soundtrack at a comfortable in-car volume.</p></div>
             </article>
+          </div>
+
+          <div class="pulsemesh-card" id="pulsemesh-card">
+            <div class="pulsemesh-mark" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="pulsemesh-copy">
+              <span>Phone audio</span>
+              <h3>No FM radio? You’re still invited.</h3>
+              <p>Listen on your phone with PulseMesh and keep the soundtrack with the lights.</p>
+            </div>
+            <a class="pulsemesh-link" id="pulsemesh-link" href="https://player.pulsemesh.io" target="_blank" rel="noreferrer" aria-disabled="true">Show audio · offline</a>
+            <p class="pulsemesh-note" id="pulsemesh-note">Available while the show is live. The player opens only when you choose it.</p>
           </div>
         </div>
       </section>
 
       <section class="about-section shell" id="about" aria-labelledby="about-title">
-        <div class="about-mark" aria-hidden="true"><span>LOA</span></div>
+        <figure class="about-art">
+          <img src="./assets/halloween-performer-cast-v1.png" alt="The Admiral conductor, Pumpkin King, Angel of Death, and Phantom posed together under Halloween stage lights" loading="lazy" />
+          <figcaption>Meet the Halloween cast.</figcaption>
+        </figure>
         <div class="about-copy">
           <div class="section-kicker"><span>04</span> About the wings</div>
           <h2 id="about-title">Admiral is more than our address.</h2>
           <p>Our streets carry the names of admiral butterflies—Red Admiral, Blue Admiral, Vice Admiral, and Admiral. That neighborhood detail became the signal behind this show: bold wings, built from light, moving together with the music.</p>
-          <p>Lights On Admiral is a homegrown display created for the people who slow down, roll down the windows, and share a little wonder with us each season.</p>
-          <a class="text-link" data-youtube href="#">See the show on YouTube <span aria-hidden="true">↗</span></a>
+          <p class="about-lede">Lights On Admiral is a homegrown show from our family to yours—for everyone who loves LED lights, music, and that unmistakable feeling when the two come alive together.</p>
+          <p>We create Halloween, Veterans Day, and Christmas shows, along with mockups, layouts, and the occasional just-for-fun display. We love hearing what viewers enjoyed and what they want to see next.</p>
+
+          <div class="about-socials" aria-label="Follow Lights On Admiral">
+            <a class="social-link social-youtube" data-youtube href="#">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.3 6.2a2.8 2.8 0 0 0-2-2C17.5 3.7 12 3.7 12 3.7s-5.5 0-7.3.5a2.8 2.8 0 0 0-2 2A29 29 0 0 0 2.2 12a29 29 0 0 0 .5 5.8 2.8 2.8 0 0 0 2 2c1.8.5 7.3.5 7.3.5s5.5 0 7.3-.5a2.8 2.8 0 0 0 2-2 29 29 0 0 0 .5-5.8 29 29 0 0 0-.5-5.8ZM10 15.6V8.4l6.2 3.6-6.2 3.6Z"/></svg>
+              <span>YouTube</span><span aria-hidden="true">↗</span>
+            </a>
+            <a class="social-link social-instagram" href="https://www.instagram.com/lightsonadmiral/" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+              <span>Instagram</span><span aria-hidden="true">↗</span>
+            </a>
+            <a class="social-link social-facebook" href="https://www.facebook.com/profile.php?id=100088076335513" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h3l.5-3H14V8.3c0-1 .4-1.8 1.9-1.8H18V3.8c-.7-.1-1.6-.3-2.8-.3-2.8 0-4.7 1.7-4.7 4.8V10H8v3h2.5v8Z"/></svg>
+              <span>Facebook</span><span aria-hidden="true">↗</span>
+            </a>
+          </div>
+
+          <div class="show-toolkit">
+            <div class="toolkit-heading">
+              <span>Behind the lights</span>
+              <p>The tools that help us design, control, and play the show.</p>
+            </div>
+            <div class="tool-links">
+              <a href="https://xlights.org/" target="_blank" rel="noreferrer"><strong>xLights</strong><span>Sequencing &amp; design ↗</span></a>
+              <a href="https://github.com/FalconChristmas/fpp" target="_blank" rel="noreferrer"><strong>Falcon Player</strong><span>Show playback ↗</span></a>
+              <a href="https://kulplights.com/" target="_blank" rel="noreferrer"><strong>Kulp Lights</strong><span>Controllers ↗</span></a>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -265,11 +385,11 @@
           <span class="brand-type"><strong>LIGHTS</strong><span>ON ADMIRAL</span></span>
         </a>
         <p>Neighborhood lights. Admiral wings. Built in Utah.</p>
-        <div class="footer-links"><a href="#songs">Songs</a><a href="#visit">Visit</a><a href="#about">About</a><a data-youtube href="#">YouTube ↗</a></div>
+        <div class="footer-links"><a href="#songs">Songs</a><a href="#visit">Visit</a><a href="#about">About</a><a data-youtube href="#">YouTube ↗</a><a href="https://www.instagram.com/lightsonadmiral/" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://www.facebook.com/profile.php?id=100088076335513" target="_blank" rel="noreferrer">Facebook ↗</a></div>
       </div>
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./app.js?v=20261009-clean-sprites2"></script>
+    <script type="module" src="./app.js?v=20261009-visit-scene2"></script>
   </body>
 </html>

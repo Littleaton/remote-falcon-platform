@@ -148,7 +148,7 @@ export function normalizeShow(show) {
 
   const sequences = [...(show.sequences || [])]
     .filter((song) => song && song.active !== false && song.visible !== false)
-    .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
+    .sort((a, b) => (a.order ?? a.index ?? 9999) - (b.order ?? b.index ?? 9999));
 
   const queue = [...(show.requests || [])]
     .filter((request) => request?.sequence)
