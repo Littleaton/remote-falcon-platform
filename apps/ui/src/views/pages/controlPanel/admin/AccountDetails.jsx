@@ -22,6 +22,7 @@ import _ from 'lodash';
 import { JsonEditor } from 'json-edit-react';
 import { useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import { setImpersonationSession } from '../../../../contexts/JWTContext';
 import { setShow } from '../../../../store/slices/show';
 import MainCard from '../../../../ui-component/cards/MainCard';
@@ -194,7 +195,7 @@ const AccountDetails = () => {
       }
 
       setTimeout(() => {
-        navigate('/control-panel/dashboard');
+        navigate(normalizeControlPanelPath('/control-panel/dashboard'));
       }, 50);
     } catch (error) {
       showAlert(dispatch, { alert: 'error' });

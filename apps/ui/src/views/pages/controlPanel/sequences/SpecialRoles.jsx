@@ -28,6 +28,7 @@ import { IconChevronRight, IconGripVertical, IconPlayerPlay, IconPlus, IconTrash
 import _ from 'lodash';
 import moment from 'moment/moment';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import {
   savePsaSequencesService,
   setNextPsaOverrideService,
@@ -479,7 +480,7 @@ const SpecialRoles = () => {
             Frequency and burst settings live on{' '}
             <Box
               component="a"
-              href="/control-panel/remote-falcon-settings/safeguards"
+              href={normalizeControlPanelPath('/control-panel/remote-falcon-settings/safeguards')}
               sx={{ color: 'primary.main', textDecoration: 'underline' }}
             >
               Show Settings <IconChevronRight size={12} style={{ verticalAlign: 'middle' }} /> Safeguards

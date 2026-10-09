@@ -23,6 +23,11 @@ Five services in Docker, all built from this monorepo:
 | `mongo` | MongoDB 7, with a Docker named volume for data | ~500 MB |
 | `nginx` | TLS termination + reverse proxy | ~30 MB |
 
+The Lights On Admiral deployment also includes an optional, site-specific
+`show-site` container. It serves the apex-domain visitor experience and uses
+the same `viewer` GraphQL API for live songs, requests, votes, and queue state.
+It does not duplicate or replace Remote Falcon show data.
+
 Plus the host OS overhead and Docker. **Minimum 2 vCPU / 4 GB RAM** is enough
 for a single show with a few hundred concurrent viewers. **8 GB / 4 vCPU** is
 comfortable.

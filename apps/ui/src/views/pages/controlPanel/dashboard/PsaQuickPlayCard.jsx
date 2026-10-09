@@ -7,6 +7,7 @@ import { alpha } from '@mui/material/styles';
 import { IconPlayerPlay, IconSpeakerphone, IconX } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import useDashboardLiveStats from '../../../../hooks/useDashboardLiveStats';
 import { setNextPsaOverrideService } from '../../../../services/controlPanel/mutations.service';
 import { useDispatch, useSelector } from '../../../../store';
@@ -109,7 +110,7 @@ const PsaQuickPlayCard = () => {
       </Stack>
       <MuiLink
         component="button"
-        onClick={() => navigate('/control-panel/sequences/special-roles')}
+        onClick={() => navigate(normalizeControlPanelPath('/control-panel/sequences/special-roles'))}
         sx={{
           fontSize: 11,
           color: 'text.secondary',
@@ -194,7 +195,11 @@ const PsaQuickPlayCard = () => {
       {psas.length === 0 ? (
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           No PSAs configured.{' '}
-          <MuiLink component="button" onClick={() => navigate('/control-panel/sequences/special-roles')} sx={{ verticalAlign: 'baseline' }}>
+          <MuiLink
+            component="button"
+            onClick={() => navigate(normalizeControlPanelPath('/control-panel/sequences/special-roles'))}
+            sx={{ verticalAlign: 'baseline' }}
+          >
             Add some in Special Roles
           </MuiLink>
           .

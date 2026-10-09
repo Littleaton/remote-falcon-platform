@@ -7,6 +7,7 @@ import _ from 'lodash';
 import moment from 'moment-timezone';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import EmptyState from '../../../../ui-component/EmptyState';
 import MainCard from '../../../../ui-component/cards/MainCard';
 import { useSelector } from '../../../../store';
@@ -162,7 +163,7 @@ const BetaGate = () => (
         variant="outlined"
         color="warning"
         component={RouterLink}
-        to="/control-panel/account-settings/notifications"
+        to={normalizeControlPanelPath('/control-panel/account-settings/notifications')}
       >
         Open Notifications
       </Button>

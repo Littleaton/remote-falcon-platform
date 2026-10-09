@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-import { getSubdomain, isSubdomainCP, isExternalViewer, getRouterBasename } from '../helpers';
+import { getSubdomain, isSubdomainCP, isExternalViewer, getRouterBasename, getViewerPath } from '../helpers';
 
 // These helpers govern the entire routing topology: whether the current
 // load is the control panel, a viewer page, or an external viewer. A
@@ -102,6 +102,18 @@ describe('route-guard helpers', () => {
       import.meta.env.VITE_HOSTNAME_PARTS = '1';
       setHostname('controlpanel.localhost');
       expect(isExternalViewer()).toBeFalsy();
+    });
+  });
+
+  describe('getViewerPath', () => {
+    it('uses the hostname root in single-show mode', () => {
+      import.meta.env.VITE_SWAP_CP = 'true';
+      expect(getViewerPath()).toBe('/');
+    });
+
+    it('retains the legacy viewer path in other modes', () => {
+      import.meta.env.VITE_SWAP_CP = 'false';
+      expect(getViewerPath()).toBe('/remote-falcon');
     });
   });
 

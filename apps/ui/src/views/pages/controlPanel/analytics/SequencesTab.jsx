@@ -7,6 +7,7 @@ import _ from 'lodash';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import EmptyState from '../../../../ui-component/EmptyState';
 import MainCard from '../../../../ui-component/cards/MainCard';
 import { useSelector } from '../../../../store';
@@ -18,7 +19,7 @@ import RequestConversion from './RequestConversion';
 import useAnalyticsFilters from './useAnalyticsFilters';
 import useDashboardStats from './useDashboardStats';
 
-const sequenceDetailUrl = (name) => `/control-panel/analytics/sequence/${encodeURIComponent(name)}`;
+const sequenceDetailUrl = (name) => normalizeControlPanelPath(`/control-panel/analytics/sequence/${encodeURIComponent(name)}`);
 
 // Mode override for the Sequences analytics tab. The two sub-routes
 // ("Sequences (Jukebox)" / "Sequences (Voting)") each supply a value so

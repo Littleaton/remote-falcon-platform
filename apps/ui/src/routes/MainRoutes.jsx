@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Navigate } from 'react-router-dom';
 
+import { CLEAN_CONTROL_PANEL_PATHS, normalizeControlPanelPath } from '../config';
 import MainLayout from '../layout/MainLayout';
 import Loadable from '../ui-component/Loadable';
 import lazyChunk from '../utils/lazyChunk';
@@ -65,10 +66,14 @@ const MainRoutes = {
       path: '/',
       element: <Landing />
     },
-    {
-      path: '/control-panel',
-      element: <Navigate to="/control-panel/dashboard" />
-    },
+    ...(!CLEAN_CONTROL_PANEL_PATHS
+      ? [
+          {
+            path: '/control-panel',
+            element: <Navigate to="/control-panel/dashboard" />
+          }
+        ]
+      : []),
     // Sub-route layouts use nested children with their own <Outlet />.
     // First child is the index/default redirect.
     {
@@ -171,4 +176,10 @@ const MainRoutes = {
   ]
 };
 
-export default MainRoutes;
+const normalizeRoutePaths = (route) => ({
+  ...route,
+  ...(route.path ? { path: normalizeControlPanelPath(route.path) } : {}),
+  ...(route.children ? { children: route.children.map(normalizeRoutePaths) } : {})
+});
+
+export default normalizeRoutePaths(MainRoutes);

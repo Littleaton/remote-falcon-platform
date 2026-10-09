@@ -72,4 +72,12 @@ describe('useShowPublicUrl', () => {
     const { result } = renderHook(() => useShowPublicUrl(), { wrapper: wrap(store) });
     expect(result.current).toBe('http://localhost:5173');
   });
+
+  it('uses the configured root host when SWAP_CP is on in production', () => {
+    import.meta.env.VITE_SWAP_CP = 'true';
+    import.meta.env.VITE_CONTROL_PANEL_API = 'https://remote.example.com/remote-falcon-control-panel';
+    const store = buildStore({ showSubdomain: 'matt' });
+    const { result } = renderHook(() => useShowPublicUrl(), { wrapper: wrap(store) });
+    expect(result.current).toBe('https://remote.example.com');
+  });
 });

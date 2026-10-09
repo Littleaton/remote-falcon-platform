@@ -15,6 +15,7 @@ import {
 } from '@tabler/icons-react';
 import _ from 'lodash';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import { savePreferencesService } from '../../../../services/controlPanel/mutations.service';
 import MainCard from '../../../../ui-component/cards/MainCard';
 import useDashboardLiveStats from '../../../../hooks/useDashboardLiveStats';
@@ -139,14 +140,17 @@ const useChecks = () => {
         status: 'blocker',
         label: 'No viewer pages have been created',
         detail: 'Create a viewer page in the Viewer Page section before going live.',
-        action: { label: 'Open viewer page', onClick: goTo('/control-panel/viewer-page') }
+        action: { label: 'Open viewer page', onClick: goTo(normalizeControlPanelPath('/control-panel/viewer-page')) }
       });
     } else if (activePages.length === 0) {
       out.push({
         status: 'blocker',
         label: 'No active viewer page selected',
         detail: 'Pick an active viewer page in Settings → Viewer Page.',
-        action: { label: 'Open settings', onClick: goTo('/control-panel/remote-falcon-settings/viewer-page') }
+        action: {
+          label: 'Open settings',
+          onClick: goTo(normalizeControlPanelPath('/control-panel/remote-falcon-settings/viewer-page'))
+        }
       });
     } else {
       out.push({ status: 'ok', label: `Active viewer page: ${activePages[0].name}` });
@@ -157,14 +161,14 @@ const useChecks = () => {
         status: 'blocker',
         label: 'No sequences imported',
         detail: 'Sync your sequences from FPP — the FPP plugin\'s "Sync Playlists" pushes them here.',
-        action: { label: 'Open sequences', onClick: goTo('/control-panel/sequences/list') }
+        action: { label: 'Open sequences', onClick: goTo(normalizeControlPanelPath('/control-panel/sequences/list')) }
       });
     } else if (activeSequenceCount === 0) {
       out.push({
         status: 'warn',
         label: `${sequences.length} sequences imported, but none are active`,
         detail: 'Activate at least one sequence so it appears on the viewer page.',
-        action: { label: 'Open sequences', onClick: goTo('/control-panel/sequences/list') }
+        action: { label: 'Open sequences', onClick: goTo(normalizeControlPanelPath('/control-panel/sequences/list')) }
       });
     } else {
       out.push({
@@ -179,7 +183,10 @@ const useChecks = () => {
     // Location check rows always lead with "Location check:" followed by
     // the chosen method's specifics, so all three modes (GPS / Code / off)
     // render in a consistent shape regardless of state.
-    const safeguards = { label: 'Open safeguards', onClick: goTo('/control-panel/remote-falcon-settings/safeguards') };
+    const safeguards = {
+      label: 'Open safeguards',
+      onClick: goTo(normalizeControlPanelPath('/control-panel/remote-falcon-settings/safeguards'))
+    };
     if (prefs.locationCheckMethod === LocationCheckMethod.GEO) {
       if (!prefs.allowedRadius || prefs.allowedRadius <= 0) {
         out.push({

@@ -13,6 +13,7 @@ import {
 import _ from 'lodash';
 import { useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../config';
 import useAuth from '../../hooks/useAuth';
 import controlPanelGroups from '../../menu-items/controlPanel';
 import { savePreferencesService } from '../../services/controlPanel/mutations.service';
@@ -113,7 +114,7 @@ const useCommands = () => {
         hint: `Sequence${sequence.artist ? ` · ${sequence.artist}` : ''}`,
         group: 'Sequences',
         icon: <IconMusic size={18} stroke={1.75} />,
-        run: () => navigate(`/control-panel/analytics/sequence/${encodeURIComponent(sequence.name)}`)
+        run: () => navigate(normalizeControlPanelPath(`/control-panel/analytics/sequence/${encodeURIComponent(sequence.name)}`))
       });
     });
 

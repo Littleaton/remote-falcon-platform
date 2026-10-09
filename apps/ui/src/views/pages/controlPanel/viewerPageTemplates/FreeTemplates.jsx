@@ -23,6 +23,7 @@ import { IconDeviceDesktop, IconDeviceMobile, IconDeviceTablet, IconPlus } from 
 import _ from 'lodash';
 import { useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import { savePagesService } from '../../../../services/controlPanel/mutations.service';
 import { getRemoteViewerPageTemplatesFromGithubService } from '../../../../services/controlPanel/viewerPage.service';
 import { useDispatch, useSelector } from '../../../../store';
@@ -155,7 +156,7 @@ const FreeTemplates = () => {
           tier: 'free',
           page_count_after: updated.length
         });
-        navigate('/control-panel/viewer-page');
+        navigate(normalizeControlPanelPath('/control-panel/viewer-page'));
       } else {
         showAlert(dispatch, response?.toast || { alert: 'error' });
       }

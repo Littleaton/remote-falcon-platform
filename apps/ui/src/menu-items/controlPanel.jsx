@@ -19,6 +19,8 @@ import {
 } from '@tabler/icons-react';
 import { FormattedMessage } from 'react-intl';
 
+import { normalizeControlPanelPath } from '../config';
+
 // Sidebar sections per the v2 dashboard mockup
 // (apps/ui/docs/design-system/mockup.html, [data-screen="control"]).
 // Each top-level entry is its own group → NavGroup renders the title
@@ -200,6 +202,12 @@ const adminGroup = {
   ]
 };
 
-export const controlPanelGroups = [showGroup, accountGroup, communityGroup, helpGroup, adminGroup];
+const normalizeMenuPaths = (item) => ({
+  ...item,
+  ...(item.url ? { url: normalizeControlPanelPath(item.url) } : {}),
+  ...(item.children ? { children: item.children.map(normalizeMenuPaths) } : {})
+});
+
+export const controlPanelGroups = [showGroup, accountGroup, communityGroup, helpGroup, adminGroup].map(normalizeMenuPaths);
 
 export default controlPanelGroups;

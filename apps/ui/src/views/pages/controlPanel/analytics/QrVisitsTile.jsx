@@ -2,6 +2,7 @@ import { Link, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import StatTile from '../../../../ui-component/StatTile';
 
 // Issue #189: page views that arrived with utm_source=qr, which the QR Code
@@ -25,7 +26,7 @@ const QrVisitsTile = ({ visits, delta }) => {
         sub={
           <span data-testid="qr-visits-empty">
             Turn on &ldquo;Tag with print campaign&rdquo; on the{' '}
-            <Link component={RouterLink} to="/control-panel/qr-code">
+            <Link component={RouterLink} to={normalizeControlPanelPath('/control-panel/qr-code')}>
               QR Code page
             </Link>{' '}
             and reprint your sign. Counting starts from this release, so earlier scans aren&rsquo;t included.

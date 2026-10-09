@@ -22,6 +22,7 @@ import {
 import { IconGripVertical, IconPlus, IconStack2, IconTrash } from '@tabler/icons-react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import {
   saveSequenceGroupsService,
   saveSequencesService
@@ -178,7 +179,7 @@ const SequenceGroups = () => {
   };
 
   const filterListByGroup = (groupName) => {
-    navigate(`/control-panel/sequences/list?group=${encodeURIComponent(groupName)}`);
+    navigate(normalizeControlPanelPath(`/control-panel/sequences/list?group=${encodeURIComponent(groupName)}`));
   };
 
   const isEmpty = !busy && groups.length === 0;
@@ -354,7 +355,7 @@ const SequenceGroups = () => {
       {!isEmpty && (
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, ml: 1 }}>
           To add sequences to a group, edit the Group cell on the{' '}
-          <RouterLink to="/control-panel/sequences/list" style={{ color: 'inherit' }}>
+          <RouterLink to={normalizeControlPanelPath('/control-panel/sequences/list')} style={{ color: 'inherit' }}>
             Sequences
           </RouterLink>{' '}
           tab — or use the Set group… bulk action there.

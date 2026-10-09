@@ -20,6 +20,7 @@ import { IconBrush, IconPlus } from '@tabler/icons-react';
 import _ from 'lodash';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import { savePagesService } from '../../../../services/controlPanel/mutations.service';
 import { getRemoteViewerPageTemplatesFromGithubService } from '../../../../services/controlPanel/viewerPage.service';
 import { useDispatch, useSelector } from '../../../../store';
@@ -598,7 +599,7 @@ const ViewerPage = () => {
           <Stack direction="row" spacing={1}>
             <Button
               component={RouterLink}
-              to="/control-panel/viewer-page-templates/free"
+              to={normalizeControlPanelPath('/control-panel/viewer-page-templates/free')}
               variant="outlined"
               color="primary"
               startIcon={<IconBrush size={16} stroke={1.75} />}

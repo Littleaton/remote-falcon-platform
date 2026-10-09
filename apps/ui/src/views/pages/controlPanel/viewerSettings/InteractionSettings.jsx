@@ -9,6 +9,7 @@ import _ from 'lodash';
 import moment from 'moment/moment';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import IpListField from '../../../../ui-component/IpListField';
 import MainCard from '../../../../ui-component/cards/MainCard';
 import StickyFormBar from '../../../../ui-component/StickyFormBar';
@@ -309,7 +310,7 @@ const InteractionSettings = () => {
                   <Grid item xs={12} md={6} lg={4}>
                     <Button
                       component={RouterLink}
-                      to="/control-panel/sequences/special-roles"
+                      to={normalizeControlPanelPath('/control-panel/sequences/special-roles')}
                       variant="outlined"
                       endIcon={<IconChevronRight size={16} />}
                       data-testid="manage-psas-link"

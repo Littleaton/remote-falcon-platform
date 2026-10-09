@@ -49,6 +49,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import _ from 'lodash';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import {
   forceNextSongService,
   playSequenceFromControlPanelService,
@@ -1285,7 +1286,7 @@ const SequencesList = () => {
                       {' '}
                       This only reorders songs within each category group — it won&apos;t change the order category
                       sections themselves appear in. For that, use{' '}
-                      <RouterLink to="/control-panel/sequences/categories" style={{ color: 'inherit' }}>
+                      <RouterLink to={normalizeControlPanelPath('/control-panel/sequences/categories')} style={{ color: 'inherit' }}>
                         the Categories tab
                       </RouterLink>
                       .

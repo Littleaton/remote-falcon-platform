@@ -159,6 +159,16 @@ services:
       - control-panel
       - viewer
 
+  # Custom public show site for the apex domain. It reads and controls the
+  # existing Remote Falcon show through the viewer GraphQL service; no second
+  # database or duplicated show configuration is involved.
+  show-site:
+    build:
+      context: ../../apps/lights-on-admiral-site
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -173,6 +183,7 @@ services:
       - control-panel
       - viewer
       - plugins-api
+      - show-site
 
 volumes:
   mongo-data:

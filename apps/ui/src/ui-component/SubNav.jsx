@@ -4,6 +4,8 @@ import { Box, Stack } from '@mui/material';
 import PropTypes from 'prop-types';
 import { NavLink, useLocation } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../config';
+
 // v2 horizontal sub-nav pattern. Sits below the PageHead on any page that
 // has multiple sub-views (settings, admin, templates, etc.). Each item is
 // a pill-shaped router NavLink — clicking changes the URL, browser back
@@ -46,7 +48,7 @@ const SubNav = ({ items }) => {
         <Box
           key={item.to}
           component={NavLink}
-          to={{ pathname: item.to, search: location.search }}
+          to={{ pathname: normalizeControlPanelPath(item.to), search: location.search }}
           end={item.end}
           sx={{
             position: 'relative',

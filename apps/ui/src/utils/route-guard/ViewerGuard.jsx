@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import useAuth from '../../hooks/useAuth';
 
-import { isExternalViewer } from './helpers/helpers';
+import { getViewerPath, isExternalViewer } from './helpers/helpers';
 
 /**
  * Guest guard for routes having no auth required
@@ -15,12 +15,16 @@ import { isExternalViewer } from './helpers/helpers';
 const ViewerGuard = ({ children }) => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (isExternalViewer()) {
-      navigate('/remote-falcon', { replace: true });
+      const viewerPath = getViewerPath();
+      if (location.pathname !== viewerPath) {
+        navigate(viewerPath, { replace: true });
+      }
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, location.pathname, navigate]);
 
   return children;
 };

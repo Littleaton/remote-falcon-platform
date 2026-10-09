@@ -18,6 +18,16 @@ export const getShowPublicUrl = (showSubdomain) => {
   if (import.meta.env.VITE_HOST_ENV === Environments.LOCAL) {
     return swapCP ? 'http://localhost:5173' : `http://${showSubdomain}.localhost:5173`;
   }
+  // Single-show self-host: the viewer lives at the configured root host. The
+  // control-panel API is built from WEB_URL, so its origin is the canonical
+  // public URL even when this helper runs from controlpanel.<host>.
+  if (swapCP) {
+    try {
+      return new URL(import.meta.env.VITE_CONTROL_PANEL_API).origin;
+    } catch {
+      return window.location.origin;
+    }
+  }
   if (import.meta.env.VITE_HOST_ENV === Environments.TEST) {
     return `https://${showSubdomain}.remotefalcon.dev`;
   }

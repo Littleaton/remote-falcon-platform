@@ -5,6 +5,7 @@ import { IconArrowLeft, IconCalendar, IconDownload, IconMusic, IconTrendingUp } 
 import moment from 'moment-timezone';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import EmptyState from '../../../../ui-component/EmptyState';
 import MainCard from '../../../../ui-component/cards/MainCard';
 import PageHead from '../../../../ui-component/PageHead';
@@ -116,7 +117,7 @@ const SequenceDetail = () => {
             '&:hover': { color: 'text.primary' }
           }}
           component={RouterLink}
-          to="/control-panel/analytics/sequences-jukebox"
+          to={normalizeControlPanelPath('/control-panel/analytics/sequences-jukebox')}
           style={{ textDecoration: 'none' }}
         >
           <IconArrowLeft size={16} stroke={1.75} />

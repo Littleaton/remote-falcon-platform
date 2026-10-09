@@ -19,6 +19,10 @@ const viewerHost = () => import.meta.env.VITE_VIEWER_HOST || '';
 
 export const isPathRouted = () => !!controlHost() && !!viewerHost();
 
+// Single-show self-hosts serve the viewer at the hostname root. Other modes
+// retain the historical /remote-falcon route.
+export const getViewerPath = () => import.meta.env.VITE_SWAP_CP === 'true' ? '/' : '/remote-falcon';
+
 // In path-routed mode the show is the first path segment of the URL, e.g.
 // lightshow.example.com/holtz -> "holtz". This stays correct after the internal
 // redirect to /remote-falcon because the show prefix remains first in the path.

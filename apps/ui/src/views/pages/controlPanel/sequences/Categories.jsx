@@ -25,6 +25,7 @@ import {
 import { IconGripVertical, IconPlus, IconTags, IconTrash } from '@tabler/icons-react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
+import { normalizeControlPanelPath } from '../../../../config';
 import {
   saveCategoriesService,
   saveSequencesService
@@ -247,7 +248,7 @@ const Categories = () => {
   };
 
   const filterListByCategory = (categoryName) => {
-    navigate(`/control-panel/sequences/list?category=${encodeURIComponent(categoryName)}`);
+    navigate(normalizeControlPanelPath(`/control-panel/sequences/list?category=${encodeURIComponent(categoryName)}`));
   };
 
   const isEmpty = !busy && categories.length === 0;
@@ -554,7 +555,7 @@ const Categories = () => {
       {!isEmpty && (
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, ml: 1 }}>
           To assign sequences to a category, edit the Category cell on the{' '}
-          <RouterLink to="/control-panel/sequences/list" style={{ color: 'inherit' }}>
+          <RouterLink to={normalizeControlPanelPath('/control-panel/sequences/list')} style={{ color: 'inherit' }}>
             Sequences
           </RouterLink>{' '}
           tab — or use the Set category… bulk action there.
