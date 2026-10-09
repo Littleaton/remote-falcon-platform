@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js?v=20261009-traffic4';
+import { SITE_CONFIG } from './config.js?v=20261009-queue1';
 import { RemoteFalconError, fetchShow, isHeartbeatFresh, submitSong } from './api.js';
 import { choosePerformer } from './performers.js';
 
@@ -218,39 +218,46 @@ function startVisitTraffic() {
   const runWatchLane = async () => {
     let firstCycle = true;
     while (watchCars[0]?.isConnected) {
-      await wait(firstCycle ? randomBetween(500, 1400) : randomBetween(5200, 12800));
+      await wait(firstCycle ? randomBetween(500, 1400) : randomBetween(4800, 13200));
       firstCycle = false;
 
-      const activeCars = shuffled(watchCars).slice(0, Math.random() < 0.38 ? 2 : 3);
-      const stopPositions = activeCars.length === 3 ? [66, 45, 24] : [57, 32];
+      const roll = Math.random();
+      const queueSize = roll < 0.22 ? 1 : roll < 0.64 ? 2 : 3;
+      const activeCars = shuffled(watchCars).slice(0, queueSize);
+      const stopPositions = [66, 45, 24];
       const laneOffset = randomBetween(-2.5, 2.5);
-      const arrivalDuration = randomBetween(3600, 5200);
+      const queue = [];
 
-      await Promise.all(activeCars.map((car, index) => {
+      for (let index = 0; index < activeCars.length; index += 1) {
+        const car = activeCars[index];
         const stop = stopPositions[index] + laneOffset;
-        const start = stop - 96;
+        const start = -16;
         car.dataset.trafficState = 'arriving';
         car.style.left = `${start}%`;
         car.style.opacity = '0';
-        return animateCar(
+        await animateCar(
           car,
           [
             { left: `${start}%`, opacity: 0 },
             { left: `${start + 4}%`, opacity: 1, offset: 0.05 },
             { left: `${stop}%`, opacity: 1 }
           ],
-          { duration: arrivalDuration, easing: 'cubic-bezier(.25,.72,.3,1)' },
+          { duration: randomBetween(3300, 5200), easing: 'cubic-bezier(.25,.72,.3,1)' },
           { left: `${stop}%`, opacity: '1' }
-        ).then(() => { car.dataset.trafficState = 'watching'; });
-      }));
+        );
+        car.dataset.trafficState = index === 0 ? 'watching' : 'queued';
+        queue.push(car);
+        if (index < activeCars.length - 1) await wait(randomBetween(1200, 4200));
+      }
 
-      for (let index = 0; index < activeCars.length; index += 1) {
-        const car = activeCars[index];
-        await wait(index === 0 ? randomBetween(9000, 18000) : randomBetween(4200, 9800));
-        car.dataset.trafficState = 'leaving';
-        const start = Number.parseFloat(car.style.left);
+      while (queue.length) {
+        const leadCar = queue.shift();
+        leadCar.dataset.trafficState = 'watching';
+        await wait(randomBetween(7600, 17800));
+        leadCar.dataset.trafficState = 'leaving';
+        const start = Number.parseFloat(leadCar.style.left);
         await animateCar(
-          car,
+          leadCar,
           [
             { left: `${start}%`, opacity: 1 },
             { left: '112%', opacity: 1, offset: 0.94 },
@@ -259,7 +266,25 @@ function startVisitTraffic() {
           { duration: randomBetween(3400, 5200), easing: 'cubic-bezier(.45,0,.55,1)' },
           { left: '116%', opacity: '0' }
         );
-        car.dataset.trafficState = 'idle';
+        leadCar.dataset.trafficState = 'idle';
+
+        if (queue.length) {
+          const advanceDuration = randomBetween(1800, 3100);
+          await Promise.all(queue.map((car, index) => {
+            const from = Number.parseFloat(car.style.left);
+            const nextStop = stopPositions[index] + laneOffset;
+            car.dataset.trafficState = index === 0 ? 'advancing' : 'queued';
+            return animateCar(
+              car,
+              [
+                { left: `${from}%`, opacity: 1 },
+                { left: `${nextStop}%`, opacity: 1 }
+              ],
+              { duration: advanceDuration, easing: 'cubic-bezier(.3,.7,.3,1)' },
+              { left: `${nextStop}%`, opacity: '1' }
+            );
+          }));
+        }
       }
     }
   };
