@@ -51,6 +51,16 @@ body {
   line-height: 1.55;
 }
 
+.site-loading-screen { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 42%, rgba(99,22,31,.34), transparent 36%), linear-gradient(145deg, #050608, #12090f 58%, #08090b); opacity: 1; visibility: visible; transition: opacity .42s ease, visibility .42s step-end; }
+.site-loading-screen::before, .site-loading-screen::after { position: absolute; inset: 7%; content: ""; border: 1px solid rgba(240,109,39,.18); pointer-events: none; }
+.site-loading-screen::after { inset: 10%; border-style: dashed; border-color: rgba(255,181,57,.09); }
+.site-loading-screen.is-dismissed { opacity: 0; visibility: hidden; pointer-events: none; }
+.site-loading-brand { position: relative; display: grid; justify-items: center; text-align: center; text-transform: uppercase; }
+.site-loading-brand img { width: clamp(150px, 28vw, 230px); height: auto; filter: drop-shadow(0 0 24px rgba(239,74,32,.52)); animation: site-loader-glow 1.5s ease-in-out infinite; }
+.site-loading-brand strong { margin-top: 18px; font: clamp(30px, 7vw, 54px)/.86 var(--display); letter-spacing: .04em; text-shadow: 0 0 18px rgba(255,255,255,.08); }
+.site-loading-brand strong em { margin-left: .14em; color: #ff9a32; font-style: normal; }
+.site-loading-brand span { margin-top: 11px; color: #ff9f30; font-size: clamp(7px, 1.5vw, 10px); font-weight: 900; letter-spacing: .32em; }
+
 body::before {
   position: fixed;
   inset: 0;
@@ -439,6 +449,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes pulse { 50% { opacity: .45; } }
 @keyframes equalize { to { height: 8px; opacity: .35; } }
 @keyframes loading-butterfly { 0%, 100% { transform: translateY(0) scale(.96); filter: drop-shadow(0 0 9px rgba(239,74,32,.34)); } 50% { transform: translateY(-5px) scale(1.035); filter: drop-shadow(0 0 18px rgba(255,126,35,.68)); } }
+@keyframes site-loader-glow { 0%, 100% { transform: translateY(0) scale(.97); filter: drop-shadow(0 0 18px rgba(239,74,32,.38)); } 50% { transform: translateY(-5px) scale(1.025); filter: drop-shadow(0 0 34px rgba(255,137,38,.76)); } }
 @keyframes signal-live-pulse { 50% { opacity: .52; transform: scale(.84); } }
 @keyframes house-shimmer { 0%, 100% { opacity: .42; transform: scale(.76); } 45% { opacity: 1; transform: scale(1.2); } 58% { opacity: .7; transform: scale(.94); } }
 @keyframes pumpkin-carving-pulse { 0%, 100% { opacity: .26; filter: brightness(.9) drop-shadow(0 0 2px rgba(255,133,22,.5)); } 48% { opacity: .92; filter: brightness(1.45) drop-shadow(0 0 7px rgba(255,150,35,.95)); } }

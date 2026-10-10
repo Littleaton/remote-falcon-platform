@@ -10,11 +10,18 @@
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/favicon.svg?v=20261009-halloween-header1" type="image/svg+xml" />
     <link rel="preload" href="./assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1" as="image" />
-    <link rel="stylesheet" href="./styles.css?v=20261009-logo-loader1" />
+    <link rel="stylesheet" href="./styles.css?v=20261009-site-loader1" />
     <title>Lights On Admiral</title>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to the show</a>
+    <div class="site-loading-screen" id="site-loading-screen" role="status" aria-label="Loading Lights On Admiral">
+      <div class="site-loading-brand" aria-hidden="true">
+        <img src="./assets/loa-halloween-crest.svg" alt="" />
+        <strong>Lights <em>On Admiral</em></strong>
+        <span>Halloween Light Show</span>
+      </div>
+    </div>
     <div class="ambient ambient-a" aria-hidden="true"></div>
     <div class="ambient ambient-b" aria-hidden="true"></div>
     <div class="halloween-page-effects" aria-hidden="true">
@@ -426,6 +433,6 @@
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./app.js?v=20261009-rf-flags1"></script>
+    <script type="module" src="./app.js?v=20261009-site-loader1"></script>
   </body>
 </html>

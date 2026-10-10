@@ -1104,6 +1104,20 @@ function bindEvents() {
   });
 }
 
+function dismissSiteLoadingScreen() {
+  const loader = $('#site-loading-screen');
+  if (!loader || loader.classList.contains('is-dismissed')) return;
+  loader.classList.add('is-dismissed');
+  setTimeout(() => loader.remove(), 500);
+}
+
+if (document.readyState === 'complete') {
+  setTimeout(dismissSiteLoadingScreen, 350);
+} else {
+  window.addEventListener('load', () => setTimeout(dismissSiteLoadingScreen, 350), { once: true });
+}
+setTimeout(dismissSiteLoadingScreen, 5000);
+
 applyConfig();
 randomizePumpkinPlacement();
 startFlyingGhost();
