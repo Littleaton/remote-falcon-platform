@@ -10,7 +10,7 @@
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/favicon.svg?v=20261009-halloween-header1" type="image/svg+xml" />
     <link rel="preload" href="./assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1" as="image" />
-    <link rel="stylesheet" href="./styles.css?v=20261009-show-state1" />
+    <link rel="stylesheet" href="./styles.css?v=20261009-rf-parity1" />
     <title>Lights On Admiral</title>
   </head>
   <body>
@@ -163,6 +163,7 @@
             <span>Nightly through October 31</span>
           </div>
           <div class="now-copy">
+            <div class="now-artwork" id="now-artwork" hidden><img id="now-artwork-image" alt="" /></div>
             <p id="status-kicker">Show status</p>
             <strong id="now-title">Tuning the lights</strong>
             <span id="now-artist">We’ll have tonight’s track here when the show goes live.</span>
@@ -192,6 +193,12 @@
             <span class="song-count" id="song-count">Loading playlist…</span>
           </div>
         </div>
+        <p class="interaction-summary" id="interaction-summary" aria-live="polite">Remote Falcon controls will appear here.</p>
+
+        <div class="location-help" id="location-help" role="status" hidden>
+          <div><strong>Location needed</strong><p id="location-help-copy">Remote Falcon needs your location to confirm you are at the show.</p></div>
+          <button class="button" id="location-retry" type="button">Enable location</button>
+        </div>
 
         <div class="song-layout">
           <div class="song-grid" id="song-grid" aria-live="polite">
@@ -202,7 +209,7 @@
             </div>
           </div>
           <aside class="queue-panel" aria-labelledby="queue-title">
-            <div class="queue-heading"><span>Light queue</span><strong id="queue-count">0</strong></div>
+            <div class="queue-heading"><span id="queue-label">Light queue</span><strong id="queue-count">0</strong></div>
             <h3 id="queue-title">Coming up tonight</h3>
             <ol id="queue-list">
               <li class="queue-empty">Requests will line up here once the show is live.</li>
@@ -419,6 +426,6 @@
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./app.js?v=20261009-show-state1"></script>
+    <script type="module" src="./app.js?v=20261009-rf-parity1"></script>
   </body>
 </html>

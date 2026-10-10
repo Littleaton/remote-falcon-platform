@@ -14,10 +14,15 @@ const SHOW_QUERY = `
         viewerPageViewOnly
         viewerControlMode
         jukeboxDepth
+        jukeboxRequestLimit
+        checkIfRequested
+        checkIfVoted
         locationCheckMethod
         locationCode
         dailyVoteLimit
         nightlyPlayLimit
+        lastPlayCountedAt
+        analyticsBetaOptIn
       }
       sequences {
         name
@@ -30,7 +35,15 @@ const SHOW_QUERY = `
         visible
         visibilityCount
         playsToday
+        index
         order
+        type
+        group
+      }
+      categories {
+        name
+        displayOrder
+        nightlyPlayLimit
       }
       requests {
         position
@@ -38,6 +51,8 @@ const SHOW_QUERY = `
       }
       votes {
         votes
+        lastVoteTime
+        systemInjected
         sequence { name displayName }
         sequenceGroup { name }
       }
@@ -83,6 +98,47 @@ const VOTE_MUTATION = `
   }
 `;
 
+const VOTES_REMAINING_QUERY = `
+  query LightsOnAdmiralVotesRemaining($showSubdomain: String!, $viewerId: String) {
+    votesRemaining(showSubdomain: $showSubdomain, viewerId: $viewerId)
+  }
+`;
+
+const PAGE_VIEW_MUTATION = `
+  mutation RecordLightsOnAdmiralPageView(
+    $showSubdomain: String!,
+    $date: DateTime!,
+    $viewerId: String,
+    $utmSource: String,
+    $utmMedium: String
+  ) {
+    insertViewerPageStats(
+      showSubdomain: $showSubdomain,
+      date: $date,
+      viewerId: $viewerId,
+      utmSource: $utmSource,
+      utmMedium: $utmMedium
+    )
+  }
+`;
+
+const KNOWN_ERROR_CODES = new Set([
+  'QUEUE_FULL',
+  'INVALID_LOCATION',
+  'SEQUENCE_REQUESTED',
+  'SEQUENCE_UNAVAILABLE',
+  'ALREADY_VOTED',
+  'DAILY_VOTE_LIMIT_REACHED',
+  'ALREADY_REQUESTED',
+  'NAUGHTY',
+  'UNEXPECTED_ERROR'
+]);
+
+export function normalizeErrorCode(value) {
+  const message = String(value || 'UNEXPECTED_ERROR');
+  return [...KNOWN_ERROR_CODES].find((code) => message.includes(code)) || 'UNEXPECTED_ERROR';
+}
+
 export class RemoteFalconError extends Error {
   constructor(code = 'UNEXPECTED_ERROR') {
     super(code);
@@ -111,7 +167,7 @@ export async function graphQLRequest(query, variables, { signal } = {}) {
   const payload = await response.json();
   if (payload.errors?.length) {
     const first = payload.errors[0];
-    throw new RemoteFalconError(first.extensions?.message || first.message || 'UNEXPECTED_ERROR');
+    throw new RemoteFalconError(normalizeErrorCode(first.extensions?.message || first.message));
   }
 
   return payload.data;
@@ -143,6 +199,16 @@ export async function submitSong({ showSubdomain, songName, mode, viewerId, coor
   return data?.addSequenceToQueue === true;
 }
 
+export async function fetchVotesRemaining(showSubdomain, viewerId, options) {
+  const data = await graphQLRequest(VOTES_REMAINING_QUERY, { showSubdomain, viewerId }, options);
+  return Number.isFinite(data?.votesRemaining) ? data.votesRemaining : null;
+}
+
+export async function recordViewerPageView({ showSubdomain, date, viewerId = null, utmSource = null, utmMedium = null }) {
+  const data = await graphQLRequest(PAGE_VIEW_MUTATION, { showSubdomain, date, viewerId, utmSource, utmMedium });
+  return data?.insertViewerPageStats === true;
+}
+
 export function normalizeShow(show) {
   if (!show) return null;
 
@@ -154,13 +220,58 @@ export function normalizeShow(show) {
     .filter((request) => request?.sequence)
     .sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
 
-  const votes = new Map();
+  const voteTotals = new Map();
+  const voteTimes = new Map();
   for (const vote of show.votes || []) {
+    if (vote?.systemInjected || (vote?.votes || 0) >= 2000) continue;
     const name = vote?.sequence?.name || vote?.sequenceGroup?.name;
-    if (name) votes.set(name, vote.votes || 0);
+    if (name) {
+      voteTotals.set(name, vote.votes || 0);
+      voteTimes.set(name, vote.lastVoteTime || null);
+    }
   }
 
-  return { ...show, sequences, queue, votes };
+  return { ...show, sequences, queue, voteTotals, voteTimes };
+}
+
+export function votesForSong(show, song) {
+  if (!show || !song) return 0;
+  return show.voteTotals?.get(song.name) ?? (song.group ? show.voteTotals?.get(song.group) : undefined) ?? 0;
+}
+
+export function voteTimeForSong(show, song) {
+  if (!show || !song) return null;
+  return show.voteTimes?.get(song.name) ?? (song.group ? show.voteTimes?.get(song.group) : undefined) ?? null;
+}
+
+const SERVER_OFFSET_SUFFIX = /(Z|[+-]\d{2}:?\d{2})$/i;
+
+export function parseServerDateTime(value) {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.getTime();
+  const text = String(value).trim();
+  const parsed = Date.parse(SERVER_OFFSET_SUFFIX.test(text) ? text : `${text}Z`);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function isNightlyTallyCurrent(lastPlayCountedAt, now = Date.now()) {
+  const parsed = parseServerDateTime(lastPlayCountedAt);
+  return parsed !== null && parsed >= now - 6 * 60 * 60 * 1000;
+}
+
+export function effectiveNightlyLimit(show, song) {
+  const category = (show?.categories || []).find(
+    (item) => item?.name && song?.category && item.name.toLowerCase() === song.category.toLowerCase()
+  );
+  return category?.nightlyPlayLimit ?? show?.preferences?.nightlyPlayLimit ?? null;
+}
+
+export function sequenceAvailabilityReason(show, song, now = Date.now()) {
+  if ((song?.visibilityCount ?? 0) > 0) return 'Available again soon';
+  if (!isNightlyTallyCurrent(show?.preferences?.lastPlayCountedAt, now)) return '';
+  const limit = effectiveNightlyLimit(show, song);
+  if (Number.isFinite(limit) && limit > 0 && (song?.playsToday ?? 0) >= limit) return 'Back next show';
+  return '';
 }
 
 export function isHeartbeatFresh(heartbeat, now = Date.now()) {

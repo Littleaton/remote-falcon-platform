@@ -1,7 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { hasPlaybackActivity, isHeartbeatFresh, isShowRunning, normalizeShow } from '../public/api.js';
+import {
+  effectiveNightlyLimit,
+  hasPlaybackActivity,
+  isHeartbeatFresh,
+  isNightlyTallyCurrent,
+  isShowRunning,
+  normalizeErrorCode,
+  normalizeShow,
+  sequenceAvailabilityReason,
+  votesForSong
+} from '../public/api.js';
 
 test('normalizeShow filters hidden songs and sorts playlist and queue', () => {
   const show = normalizeShow({
@@ -19,7 +29,20 @@ test('normalizeShow filters hidden songs and sorts playlist and queue', () => {
 
   assert.deepEqual(show.sequences.map((song) => song.name), ['early', 'late']);
   assert.deepEqual(show.queue.map((request) => request.sequence.name), ['early', 'late']);
-  assert.equal(show.votes.get('early'), 3);
+  assert.equal(show.voteTotals.get('early'), 3);
+});
+
+test('normalizeShow excludes Remote Falcon system votes from viewer totals', () => {
+  const show = normalizeShow({
+    sequences: [{ name: 'song', active: true, visible: true }],
+    votes: [
+      { sequence: { name: 'song' }, votes: 4, lastVoteTime: '2026-10-09T12:00:00' },
+      { sequence: { name: 'priority' }, votes: 2000, systemInjected: true }
+    ]
+  });
+
+  assert.equal(votesForSong(show, { name: 'song' }), 4);
+  assert.equal(show.voteTotals.has('priority'), false);
 });
 
 test('normalizeShow falls back to the sequence index when order is absent', () => {
@@ -75,4 +98,37 @@ test('isShowRunning keeps short between-song gaps live without masking a stopped
 
   assert.equal(isShowRunning(betweenSongs, { now, lastPlaybackAt: now - 20_000 }), true);
   assert.equal(isShowRunning(betweenSongs, { now, lastPlaybackAt: now - 50_000 }), false);
+});
+
+test('sequence availability mirrors Remote Falcon cooldown and nightly category limits', () => {
+  const now = Date.parse('2026-10-10T02:00:00Z');
+  const show = {
+    preferences: { nightlyPlayLimit: 3, lastPlayCountedAt: '2026-10-10T01:55:00' },
+    categories: [
+      { name: 'Spooky', nightlyPlayLimit: 1 },
+      { name: 'Favorites', nightlyPlayLimit: 0 }
+    ]
+  };
+
+  assert.equal(effectiveNightlyLimit(show, { category: 'Spooky' }), 1);
+  assert.equal(sequenceAvailabilityReason(show, { category: 'Spooky', playsToday: 1 }, now), 'Back next show');
+  assert.equal(sequenceAvailabilityReason(show, { category: 'Favorites', playsToday: 99 }, now), '');
+  assert.equal(sequenceAvailabilityReason(show, { visibilityCount: 2 }, now), 'Available again soon');
+});
+
+test('stale nightly play totals do not disable songs from the previous show', () => {
+  const now = Date.parse('2026-10-10T12:00:00Z');
+  const show = {
+    preferences: { nightlyPlayLimit: 1, lastPlayCountedAt: '2026-10-10T04:00:00' },
+    categories: []
+  };
+
+  assert.equal(isNightlyTallyCurrent(show.preferences.lastPlayCountedAt, now), false);
+  assert.equal(sequenceAvailabilityReason(show, { playsToday: 1 }, now), '');
+});
+
+test('normalizeErrorCode extracts Remote Falcon status names from GraphQL messages', () => {
+  assert.equal(normalizeErrorCode('Exception while fetching data: QUEUE_FULL'), 'QUEUE_FULL');
+  assert.equal(normalizeErrorCode('SEQUENCE_UNAVAILABLE'), 'SEQUENCE_UNAVAILABLE');
+  assert.equal(normalizeErrorCode('something new'), 'UNEXPECTED_ERROR');
 });

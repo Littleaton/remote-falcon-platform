@@ -1,5 +1,16 @@
 import { SITE_CONFIG } from './config.js?v=20261009-show-state1';
-import { RemoteFalconError, fetchShow, hasPlaybackActivity, isShowRunning, submitSong } from './api.js?v=20261009-show-state1';
+import {
+  RemoteFalconError,
+  fetchShow,
+  fetchVotesRemaining,
+  hasPlaybackActivity,
+  isShowRunning,
+  recordViewerPageView,
+  sequenceAvailabilityReason,
+  submitSong,
+  voteTimeForSong,
+  votesForSong
+} from './api.js?v=20261009-rf-parity1';
 import { choosePerformer } from './performers.js';
 
 const state = {
@@ -8,9 +19,15 @@ const state = {
   loading: true,
   submitting: new Set(),
   pollTimer: null,
-  pollDelay: 8000,
+  pollDelay: 5000,
   toastTimer: null,
-  lastPlaybackAt: 0
+  lastPlaybackAt: 0,
+  votesRemaining: null,
+  votesRemainingLoaded: false,
+  pageViewRecorded: false,
+  locationPermission: 'unknown',
+  locationHelpNeeded: false,
+  lastCoords: null
 };
 
 let pulseMeshFrame = null;
@@ -417,6 +434,10 @@ function getViewerId() {
   return value;
 }
 
+function viewerIdForShow() {
+  return state.show?.preferences?.analyticsBetaOptIn ? getViewerId() : null;
+}
+
 function formatDuration(seconds) {
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
   const minutes = Math.floor(seconds / 60);
@@ -425,6 +446,68 @@ function formatDuration(seconds) {
 
 function songTitle(song, fallback = '—') {
   return song?.displayName || song?.name || fallback;
+}
+
+function safeArtworkUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(value, window.location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function setStatusArtwork(song, running) {
+  const copy = $('.now-copy');
+  const frame = $('#now-artwork');
+  const image = $('#now-artwork-image');
+  const url = running ? safeArtworkUrl(song?.imageUrl) : '';
+  copy.classList.toggle('has-artwork', Boolean(url));
+  frame.hidden = !url;
+  if (!url) {
+    image.removeAttribute('src');
+    image.alt = '';
+    return;
+  }
+  image.src = url;
+  image.alt = `Artwork for ${songTitle(song)}`;
+}
+
+function songVoteTime(song) {
+  const parsed = Date.parse(voteTimeForSong(state.show, song) || '');
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function orderedSongsForDisplay(songs) {
+  const categories = state.show?.categories || [];
+  const rankByCategory = new Map(
+    [...categories]
+      .map((category, index) => ({
+        name: category?.name,
+        order: Number.isFinite(category?.displayOrder) ? category.displayOrder : index,
+        index
+      }))
+      .sort((a, b) => a.order - b.order || a.index - b.index)
+      .map((category, index) => [category.name, index])
+  );
+  const mode = state.show?.preferences?.viewerControlMode || 'JUKEBOX';
+
+  return songs
+    .map((song, index) => ({ song, index }))
+    .sort((a, b) => {
+      const aCategory = a.song.category ? (rankByCategory.get(a.song.category) ?? Number.MAX_SAFE_INTEGER) : -1;
+      const bCategory = b.song.category ? (rankByCategory.get(b.song.category) ?? Number.MAX_SAFE_INTEGER) : -1;
+      if (aCategory !== bCategory) return aCategory - bCategory;
+      if (mode === 'VOTING') {
+        const voteDifference = votesForSong(state.show, b.song) - votesForSong(state.show, a.song);
+        if (voteDifference) return voteDifference;
+        const timeDifference = songVoteTime(a.song) - songVoteTime(b.song);
+        if (timeDifference) return timeDifference;
+      }
+      return a.index - b.index;
+    })
+    .map(({ song }) => song);
 }
 
 function showIsRunning() {
@@ -534,6 +617,7 @@ function renderStatus() {
     $('#now-title').textContent = 'The wings are resting';
     $('#now-artist').textContent = 'The lights make more sense with the sound turned on.';
     $('#next-title').textContent = '—';
+    setStatusArtwork(null, false);
     return;
   }
 
@@ -543,22 +627,51 @@ function renderStatus() {
     ? songTitle(show.playingNowSequence, show.playingNow || 'Between songs')
     : 'The wings are resting';
   $('#now-artist').textContent = running
-    ? show.playingNowSequence?.artist || 'Live from Lights On Admiral'
+    ? [show.playingNowSequence?.artist, formatDuration(show.playingNowSequence?.duration)].filter(Boolean).join(' · ') || 'Live from Lights On Admiral'
     : 'The lights make more sense with the sound turned on.';
   $('#next-title').textContent = songTitle(show.playingNextSequence, show.playingNext || show.playingNextFromSchedule || '—');
+  setStatusArtwork(show.playingNowSequence, running);
 }
 
 function renderQueue() {
+  if (!state.show) return;
   const queue = state.show?.queue || [];
-  $('#queue-count').textContent = queue.length;
   const list = $('#queue-list');
+  const mode = state.show.preferences?.viewerControlMode || 'JUKEBOX';
+
+  if (mode === 'VOTING') {
+    const leaders = state.show.sequences
+      .map((song) => ({ song, votes: votesForSong(state.show, song) }))
+      .filter((entry) => entry.votes > 0)
+      .sort((a, b) => b.votes - a.votes || songVoteTime(a.song) - songVoteTime(b.song));
+    $('#queue-label').textContent = 'Live voting';
+    $('#queue-title').textContent = 'Top votes tonight';
+    $('#queue-count').textContent = leaders.length;
+    if (!leaders.length) {
+      list.innerHTML = `<li class="queue-empty">${showIsRunning() ? 'No votes yet. Pick the song you want to see next.' : 'Voting opens when the show goes live.'}</li>`;
+      return;
+    }
+    list.replaceChildren(...leaders.slice(0, 8).map(({ song, votes }) => {
+      const item = document.createElement('li');
+      item.textContent = songTitle(song);
+      const detail = document.createElement('span');
+      detail.textContent = `${votes} ${votes === 1 ? 'vote' : 'votes'}${song.artist ? ` · ${song.artist}` : ''}`;
+      item.append(detail);
+      return item;
+    }));
+    return;
+  }
+
+  $('#queue-label').textContent = 'Light queue';
+  $('#queue-title').textContent = 'Coming up tonight';
+  $('#queue-count').textContent = queue.length;
 
   if (!queue.length) {
     list.innerHTML = `<li class="queue-empty">${showIsRunning() ? 'The light queue is open and ready for the first request.' : 'Requests will line up here once the show is live.'}</li>`;
     return;
   }
 
-  list.replaceChildren(...queue.slice(0, 8).map((request) => {
+  list.replaceChildren(...queue.slice(1, 9).map((request) => {
     const item = document.createElement('li');
     item.textContent = songTitle(request.sequence);
     if (request.sequence.artist) {
@@ -568,12 +681,9 @@ function renderQueue() {
     }
     return item;
   }));
-}
-
-function isUnavailable(song) {
-  if (song.visibilityCount > 0) return true;
-  const limit = state.show?.preferences?.nightlyPlayLimit;
-  return Boolean(limit && limit > 0 && song.playsToday >= limit);
+  if (!list.children.length) {
+    list.innerHTML = '<li class="queue-empty">The next request is already moving into position.</li>';
+  }
 }
 
 function renderSongs() {
@@ -585,13 +695,14 @@ function renderSongs() {
     $('#song-count').textContent = 'Signal unavailable';
     $('#playlist-status').className = 'playlist-status is-offline';
     $('#playlist-status').innerHTML = '<i></i> Signal unavailable';
+    $('#interaction-summary').textContent = 'Controls reconnect when the show signal returns.';
     return;
   }
 
-  const songs = state.show.sequences.filter((song) => {
+  const songs = orderedSongsForDisplay(state.show.sequences.filter((song) => {
     const haystack = `${songTitle(song)} ${song.artist || ''}`.toLowerCase();
     return haystack.includes(state.query);
-  });
+  }));
 
   const fresh = showIsRunning();
   $('#song-count').textContent = `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`;
@@ -599,27 +710,64 @@ function renderSongs() {
   $('#playlist-status').innerHTML = `<i></i> ${fresh ? 'Show live' : 'Browse playlist'}`;
   const mode = state.show.preferences?.viewerControlMode || 'JUKEBOX';
   const interactionReady = canInteract();
-  $('#song-instructions').textContent = interactionReady
-    ? mode === 'VOTING'
-      ? 'Tap a song to cast your vote. The crowd decides what plays next.'
-      : 'Tap a song and it joins the light queue.'
-    : 'The playlist is here to browse. Song controls open when the show goes live.';
+  const readOnly = state.show.preferences?.viewerPageViewOnly;
+  $('#song-instructions').textContent = readOnly
+    ? 'The playlist is in view-only mode. You can browse tonight’s music, but requests and votes are paused.'
+    : interactionReady
+      ? mode === 'VOTING'
+        ? 'Tap a song to cast your vote. The crowd decides what plays next.'
+        : 'Tap a song and it joins the light queue.'
+      : 'The playlist is here to browse. Song controls open when the show goes live.';
+
+  const interactionSummary = $('#interaction-summary');
+  if (readOnly) {
+    interactionSummary.textContent = 'View-only mode';
+  } else if (mode === 'VOTING' && (state.show.preferences?.dailyVoteLimit || 0) > 0 && state.votesRemainingLoaded) {
+    interactionSummary.textContent = state.votesRemaining === null
+      ? 'Voting allowance managed by Remote Falcon'
+      : `${state.votesRemaining} of ${state.show.preferences.dailyVoteLimit} votes left this show`;
+  } else if (mode === 'JUKEBOX' && (state.show.preferences?.jukeboxDepth || 0) > 0) {
+    interactionSummary.textContent = `${state.show.queue.length} of ${state.show.preferences.jukeboxDepth} queue spots filled`;
+  } else {
+    interactionSummary.textContent = mode === 'VOTING' ? 'Live voting' : 'Jukebox requests';
+  }
 
   if (!songs.length) {
     grid.innerHTML = `<div class="empty-state"><h3>${state.show.sequences.length ? 'No songs match that search.' : 'The playlist is still being assembled.'}</h3><p>${state.show.sequences.length ? 'Try a title or artist.' : 'Songs will appear automatically after the show controller syncs.'}</p></div>`;
     return;
   }
 
-  grid.replaceChildren(...songs.map((song) => {
+  const elements = [];
+  let lastCategory = null;
+  songs.forEach((song) => {
+    const category = song.category || '';
+    if (category && category !== lastCategory) {
+      const heading = document.createElement('h3');
+      heading.className = 'song-category-heading';
+      heading.textContent = category;
+      elements.push(heading);
+    }
+    lastCategory = category;
+
     const card = document.createElement('article');
     card.className = 'song-card';
+    const unavailableReason = sequenceAvailabilityReason(state.show, song);
+    const isPlaying = [state.show.playingNow, state.show.playingNowSequence?.name]
+      .filter(Boolean)
+      .includes(song.name);
+    const isQueued = state.show.queue.some((request) => request.sequence?.name === song.name);
+    card.classList.toggle('is-unavailable', Boolean(unavailableReason));
+    card.classList.toggle('is-playing', isPlaying);
+    card.classList.toggle('is-queued', isQueued);
 
     let artwork;
-    if (song.imageUrl) {
+    const artworkUrl = safeArtworkUrl(song.imageUrl);
+    if (artworkUrl) {
       artwork = document.createElement('img');
-      artwork.src = song.imageUrl;
-      artwork.alt = '';
+      artwork.src = artworkUrl;
+      artwork.alt = `Artwork for ${songTitle(song)}`;
       artwork.loading = 'lazy';
+      artwork.referrerPolicy = 'no-referrer';
       artwork.className = 'song-art';
       artwork.addEventListener('error', () => artwork.replaceWith(makeArtworkFallback()));
     } else {
@@ -631,28 +779,35 @@ function renderSongs() {
     const heading = document.createElement('h3');
     heading.textContent = songTitle(song);
     const details = document.createElement('p');
-    details.textContent = [song.artist, formatDuration(song.duration)].filter(Boolean).join(' · ') || 'Lights On Admiral';
+    details.textContent = [song.artist, formatDuration(song.duration), song.type === 'SEQUENCE_GROUP' ? 'Song group' : ''].filter(Boolean).join(' · ') || 'Lights On Admiral';
     const meta = document.createElement('small');
-    const votes = state.show.votes.get(song.name);
-    meta.textContent = mode === 'VOTING' ? `${votes || 0} ${votes === 1 ? 'vote' : 'votes'}` : song.category || 'Light show track';
+    const votes = votesForSong(state.show, song);
+    meta.textContent = mode === 'VOTING' ? `${votes} ${votes === 1 ? 'vote' : 'votes'}` : isPlaying ? 'Playing now' : isQueued ? 'In the queue' : song.category || 'Light show track';
     info.append(heading, details, meta);
+    if (unavailableReason) {
+      const availability = document.createElement('span');
+      availability.className = 'song-availability';
+      availability.textContent = unavailableReason;
+      info.append(availability);
+    }
 
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'song-action';
     button.dataset.song = song.name;
-    const unavailable = isUnavailable(song);
-    button.disabled = !interactionReady || unavailable || state.submitting.has(song.name);
+    const noVotesLeft = mode === 'VOTING' && state.votesRemainingLoaded && state.votesRemaining === 0;
+    button.disabled = !interactionReady || Boolean(unavailableReason) || noVotesLeft || state.submitting.has(song.name);
     button.setAttribute('aria-label', `${mode === 'VOTING' ? 'Vote for' : 'Request'} ${songTitle(song)}`);
-    button.title = unavailable ? 'This song is resting for now' : interactionReady ? (mode === 'VOTING' ? 'Vote for this song' : 'Add to queue') : 'Available when the show is live';
+    button.title = unavailableReason || (noVotesLeft ? 'You have used tonight’s votes' : interactionReady ? (mode === 'VOTING' ? 'Vote for this song' : 'Add to queue') : 'Available when the show is live');
     button.innerHTML = mode === 'VOTING'
       ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8C20 15.4 12 20 12 20Z"/></svg>'
       : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
     button.addEventListener('click', () => handleSongSubmit(song));
 
     card.append(artwork, info, button);
-    return card;
-  }));
+    elements.push(card);
+  });
+  grid.replaceChildren(...elements);
 }
 
 function makeArtworkFallback() {
@@ -662,23 +817,83 @@ function makeArtworkFallback() {
   return artwork;
 }
 
+function isInAppBrowser() {
+  return /FBAN|FBAV|FB_IAB|FB4A|FBIOS|Instagram/i.test(navigator.userAgent || '');
+}
+
+async function queryLocationPermission() {
+  if (!navigator.geolocation) return 'unsupported';
+  if (!navigator.permissions?.query) return 'unknown';
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    return ['granted', 'denied', 'prompt'].includes(status?.state) ? status.state : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+function renderLocationHelp() {
+  const help = $('#location-help');
+  if (!help) return;
+  const isGeo = state.show?.preferences?.locationCheckMethod === 'GEO';
+  const shouldShow = isGeo && (state.locationHelpNeeded || ['denied', 'unsupported'].includes(state.locationPermission));
+  help.hidden = !shouldShow;
+  if (!shouldShow) return;
+
+  const copy = $('#location-help-copy');
+  const retry = $('#location-retry');
+  if (isInAppBrowser()) {
+    copy.textContent = 'This in-app browser may not share your location. Open this page in Safari or Chrome, then try again.';
+    retry.textContent = 'Try location again';
+  } else if (state.locationPermission === 'denied') {
+    copy.textContent = 'Location is blocked for this site. Allow it in your browser settings, return here, then try again.';
+    retry.textContent = 'Check location again';
+  } else if (state.locationPermission === 'unsupported') {
+    copy.textContent = 'This browser cannot share location. Open the site in Safari, Chrome, or Edge to request a song.';
+    retry.hidden = true;
+    return;
+  } else {
+    copy.textContent = 'Remote Falcon needs your location to confirm you are at the show. Tap below and allow access when prompted.';
+    retry.textContent = 'Enable location';
+  }
+  retry.hidden = false;
+}
+
 async function acquireLocation(method) {
   if (method !== 'GEO') return { coords: null, permission: 'not-required' };
-  if (!navigator.geolocation) return { coords: null, permission: 'unsupported' };
+  if (!navigator.geolocation) {
+    state.locationPermission = 'unsupported';
+    state.locationHelpNeeded = true;
+    renderLocationHelp();
+    return { coords: null, permission: 'unsupported' };
+  }
 
   try {
     const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
+      enableHighAccuracy: false,
       timeout: 10000,
-      maximumAge: 30000
+      maximumAge: 60000
     }));
-    return {
-      coords: { latitude: position.coords.latitude, longitude: position.coords.longitude },
-      permission: 'granted'
+    state.lastCoords = {
+      latitude: Number(position.coords.latitude.toFixed(5)),
+      longitude: Number(position.coords.longitude.toFixed(5))
     };
+    state.locationPermission = 'granted';
+    state.locationHelpNeeded = false;
+    renderLocationHelp();
+    return { coords: state.lastCoords, permission: 'granted' };
   } catch (error) {
-    return { coords: null, permission: error.code === 1 ? 'denied' : 'unavailable' };
+    const queried = await queryLocationPermission();
+    state.locationPermission = queried === 'unknown' ? (error?.code === 1 ? 'uncertain' : 'unavailable') : queried;
+    state.locationHelpNeeded = true;
+    renderLocationHelp();
+    return { coords: state.lastCoords, permission: state.locationPermission };
   }
+}
+
+async function retryLocation() {
+  const result = await acquireLocation('GEO');
+  if (result.coords) showToast('Location is ready. You can request or vote now.');
 }
 
 async function handleSongSubmit(song) {
@@ -698,18 +913,28 @@ async function handleSongSubmit(song) {
   renderSongs();
   try {
     const location = await acquireLocation(preferences.locationCheckMethod);
+    if (preferences.locationCheckMethod === 'GEO' && !location.coords) {
+      showToast('We still need your location before Remote Falcon can accept that choice.', true);
+      return;
+    }
     await submitSong({
       showSubdomain: SITE_CONFIG.showSubdomain,
       songName: song.name,
       mode: preferences.viewerControlMode,
-      viewerId: getViewerId(),
+      viewerId: viewerIdForShow(),
       coords: location.coords,
       locationPermission: location.permission
     });
     showToast(preferences.viewerControlMode === 'VOTING' ? `Vote cast for “${songTitle(song)}”.` : `“${songTitle(song)}” joined the light queue.`);
+    if (preferences.viewerControlMode === 'VOTING') await refreshVotesRemaining();
     await refreshShow();
   } catch (error) {
-    showToast(errorMessage(error), true);
+    if (error instanceof RemoteFalconError && error.code === 'INVALID_LOCATION') {
+      state.locationHelpNeeded = true;
+      renderLocationHelp();
+    }
+    const message = errorMessage(error);
+    if (message) showToast(message, true);
   } finally {
     state.submitting.delete(song.name);
     renderSongs();
@@ -726,6 +951,7 @@ function errorMessage(error) {
     ALREADY_REQUESTED: 'You already have a song waiting in the queue.',
     SEQUENCE_REQUESTED: 'That song is already waiting in the queue.',
     SEQUENCE_UNAVAILABLE: 'That song is resting for now. Pick another favorite.',
+    NAUGHTY: '',
     NETWORK_ERROR: 'The show signal dropped for a moment. Please try again.'
   }[code] || 'That request did not go through. Please try another song.';
 }
@@ -743,16 +969,73 @@ function render() {
   renderStatus();
   renderSongs();
   renderQueue();
+  renderLocationHelp();
+}
+
+async function refreshVotesRemaining() {
+  const preferences = state.show?.preferences || {};
+  if (preferences.viewerControlMode !== 'VOTING' || (preferences.dailyVoteLimit || 0) <= 0) {
+    state.votesRemaining = null;
+    state.votesRemainingLoaded = false;
+    return;
+  }
+  try {
+    state.votesRemaining = await fetchVotesRemaining(SITE_CONFIG.showSubdomain, viewerIdForShow());
+  } catch {
+    state.votesRemaining = null;
+  } finally {
+    state.votesRemainingLoaded = true;
+  }
+}
+
+function localDateTime() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+}
+
+async function recordPageViewIfNeeded() {
+  if (state.pageViewRecorded || !state.show) return;
+  state.pageViewRecorded = true;
+  const params = new URLSearchParams(window.location.search);
+  try {
+    await recordViewerPageView({
+      showSubdomain: SITE_CONFIG.showSubdomain,
+      date: localDateTime(),
+      viewerId: viewerIdForShow(),
+      utmSource: params.get('utm_source'),
+      utmMedium: params.get('utm_medium')
+    });
+    if (params.has('utm_source') || params.has('utm_medium')) {
+      params.delete('utm_source');
+      params.delete('utm_medium');
+      const query = params.toString();
+      history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+    }
+  } catch {
+    // Analytics must never block the viewer experience.
+  }
 }
 
 async function refreshShow() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
+    const previousMode = state.show?.preferences?.viewerControlMode;
     state.show = await fetchShow(SITE_CONFIG.showSubdomain, { signal: controller.signal });
+    if (previousMode && previousMode !== state.show?.preferences?.viewerControlMode) {
+      state.votesRemaining = null;
+      state.votesRemainingLoaded = false;
+    }
     if (hasPlaybackActivity(state.show)) state.lastPlaybackAt = Date.now();
     else if (state.show?.preferences?.viewerControlEnabled !== true) state.lastPlaybackAt = 0;
-    state.pollDelay = 8000;
+    state.pollDelay = 5000;
+    if (!state.votesRemainingLoaded) await refreshVotesRemaining();
+    void recordPageViewIfNeeded();
+    if (state.show?.preferences?.locationCheckMethod === 'GEO' && state.locationPermission === 'unknown') {
+      state.locationPermission = await queryLocationPermission();
+      state.locationHelpNeeded = state.locationPermission === 'denied';
+    }
   } catch (error) {
     state.pollDelay = Math.min(state.pollDelay * 1.8, 60000);
     if (!state.show) state.show = null;
@@ -796,6 +1079,21 @@ function bindEvents() {
     minimizePulseMesh();
   });
   $('#pulsemesh-dialog').addEventListener('close', () => renderPulseMesh(showIsRunning()));
+  $('#location-retry').addEventListener('click', retryLocation);
+  $('#now-artwork-image').addEventListener('error', () => {
+    $('.now-copy').classList.remove('has-artwork');
+    $('#now-artwork').hidden = true;
+  });
+
+  if (navigator.permissions?.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+      status.addEventListener('change', () => {
+        state.locationPermission = status.state;
+        state.locationHelpNeeded = status.state === 'denied';
+        renderLocationHelp();
+      });
+    }).catch(() => {});
+  }
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearTimeout(state.pollTimer);
