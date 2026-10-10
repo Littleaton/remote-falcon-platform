@@ -10,6 +10,7 @@ import {
   normalizeErrorCode,
   normalizeShow,
   sequenceAvailabilityReason,
+  viewerFeatures,
   votesForSong
 } from '../public/api.js';
 
@@ -131,4 +132,37 @@ test('normalizeErrorCode extracts Remote Falcon status names from GraphQL messag
   assert.equal(normalizeErrorCode('Exception while fetching data: QUEUE_FULL'), 'QUEUE_FULL');
   assert.equal(normalizeErrorCode('SEQUENCE_UNAVAILABLE'), 'SEQUENCE_UNAVAILABLE');
   assert.equal(normalizeErrorCode('something new'), 'UNEXPECTED_ERROR');
+});
+
+test('viewer features only surface controls enabled by Remote Falcon', () => {
+  assert.deepEqual(viewerFeatures({ preferences: {
+    viewerControlEnabled: true,
+    viewerPageViewOnly: false,
+    viewerControlMode: 'JUKEBOX',
+    locationCheckMethod: 'GEO'
+  } }), {
+    controlsEnabled: true,
+    jukebox: true,
+    voting: false,
+    geoLocation: true,
+    codeLocation: false
+  });
+
+  assert.deepEqual(viewerFeatures({ preferences: {
+    viewerControlEnabled: true,
+    viewerPageViewOnly: true,
+    viewerControlMode: 'VOTING',
+    locationCheckMethod: 'CODE'
+  } }), {
+    controlsEnabled: false,
+    jukebox: false,
+    voting: false,
+    geoLocation: false,
+    codeLocation: false
+  });
+
+  assert.equal(viewerFeatures({ preferences: {
+    viewerControlEnabled: true,
+    viewerControlMode: null
+  } }).controlsEnabled, false);
 });

@@ -234,6 +234,22 @@ export function normalizeShow(show) {
   return { ...show, sequences, queue, voteTotals, voteTimes };
 }
 
+export function viewerFeatures(show) {
+  const preferences = show?.preferences || {};
+  const mode = preferences.viewerControlMode;
+  const controlsEnabled = preferences.viewerControlEnabled === true
+    && preferences.viewerPageViewOnly !== true
+    && ['JUKEBOX', 'VOTING'].includes(mode);
+
+  return {
+    controlsEnabled,
+    jukebox: controlsEnabled && mode === 'JUKEBOX',
+    voting: controlsEnabled && mode === 'VOTING',
+    geoLocation: controlsEnabled && preferences.locationCheckMethod === 'GEO',
+    codeLocation: controlsEnabled && preferences.locationCheckMethod === 'CODE'
+  };
+}
+
 export function votesForSong(show, song) {
   if (!show || !song) return 0;
   return show.voteTotals?.get(song.name) ?? (song.group ? show.voteTotals?.get(song.group) : undefined) ?? 0;

@@ -245,6 +245,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .playlist-status.is-offline { color: #9298a1; }
 .song-count { color: var(--muted); text-transform: uppercase; letter-spacing: .16em; font-size: 10px; font-weight: 800; }
 .song-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 28px; align-items: start; }
+.song-layout.is-browse-only { grid-template-columns: 1fr; }
 .song-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .song-category-heading { grid-column: 1 / -1; margin: 24px 0 0; padding: 0 0 9px; border-bottom: 1px solid rgba(240,154,50,.3); color: #f0c981; font: 18px/1.1 Georgia, serif; }
 .song-card { min-height: 130px; display: grid; grid-template-columns: 92px 1fr auto; gap: 18px; align-items: center; border: 1px solid var(--line); background: rgba(255,255,255,.025); padding: 13px; transition: background .2s, border-color .2s, transform .2s; }
@@ -265,6 +266,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .song-action:disabled { cursor: not-allowed; opacity: .3; }
 .song-action svg { width: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
 .queue-panel { position: sticky; top: 20px; border-top: 3px solid var(--accent-hot); background: var(--ink-soft); padding: 24px; }
+.queue-panel[hidden] { display: none; }
 .queue-heading { display: flex; justify-content: space-between; color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font-size: 9px; font-weight: 850; }
 .queue-heading strong { min-width: 23px; height: 23px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--paper); }
 .queue-panel h3 { margin: 10px 0 22px; font-size: 22px; }

@@ -10,7 +10,7 @@
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/favicon.svg?v=20261009-halloween-header1" type="image/svg+xml" />
     <link rel="preload" href="./assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1" as="image" />
-    <link rel="stylesheet" href="./styles.css?v=20261009-rf-parity1" />
+    <link rel="stylesheet" href="./styles.css?v=20261009-rf-flags1" />
     <title>Lights On Admiral</title>
   </head>
   <body>
@@ -193,7 +193,7 @@
             <span class="song-count" id="song-count">Loading playlist…</span>
           </div>
         </div>
-        <p class="interaction-summary" id="interaction-summary" aria-live="polite">Remote Falcon controls will appear here.</p>
+        <p class="interaction-summary" id="interaction-summary" aria-live="polite" hidden></p>
 
         <div class="location-help" id="location-help" role="status" hidden>
           <div><strong>Location needed</strong><p id="location-help-copy">Remote Falcon needs your location to confirm you are at the show.</p></div>
@@ -208,7 +208,7 @@
               <p>The playlist will appear here in a moment.</p>
             </div>
           </div>
-          <aside class="queue-panel" aria-labelledby="queue-title">
+          <aside class="queue-panel" aria-labelledby="queue-title" hidden>
             <div class="queue-heading"><span id="queue-label">Light queue</span><strong id="queue-count">0</strong></div>
             <h3 id="queue-title">Coming up tonight</h3>
             <ol id="queue-list">
@@ -426,6 +426,6 @@
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./app.js?v=20261009-rf-parity1"></script>
+    <script type="module" src="./app.js?v=20261009-rf-flags1"></script>
   </body>
 </html>

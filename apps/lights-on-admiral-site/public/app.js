@@ -8,9 +8,10 @@ import {
   recordViewerPageView,
   sequenceAvailabilityReason,
   submitSong,
+  viewerFeatures,
   voteTimeForSong,
   votesForSong
-} from './api.js?v=20261009-rf-parity1';
+} from './api.js?v=20261009-rf-flags1';
 import { choosePerformer } from './performers.js';
 
 const state = {
@@ -515,13 +516,7 @@ function showIsRunning() {
 }
 
 function canInteract() {
-  const show = state.show;
-  return Boolean(
-    show &&
-      showIsRunning() &&
-      show.preferences?.viewerControlEnabled &&
-      !show.preferences?.viewerPageViewOnly
-  );
+  return viewerFeatures(state.show).controlsEnabled && showIsRunning();
 }
 
 function pulseMeshPlayerUrl() {
@@ -634,12 +629,18 @@ function renderStatus() {
 }
 
 function renderQueue() {
-  if (!state.show) return;
+  const panel = $('.queue-panel');
+  const layout = $('.song-layout');
+  const features = viewerFeatures(state.show);
+  const visible = features.jukebox || features.voting;
+  panel.hidden = !visible;
+  layout.classList.toggle('is-browse-only', !visible);
+  if (!visible || !state.show) return;
+
   const queue = state.show?.queue || [];
   const list = $('#queue-list');
-  const mode = state.show.preferences?.viewerControlMode || 'JUKEBOX';
 
-  if (mode === 'VOTING') {
+  if (features.voting) {
     const leaders = state.show.sequences
       .map((song) => ({ song, votes: votesForSong(state.show, song) }))
       .filter((entry) => entry.votes > 0)
@@ -695,7 +696,8 @@ function renderSongs() {
     $('#song-count').textContent = 'Signal unavailable';
     $('#playlist-status').className = 'playlist-status is-offline';
     $('#playlist-status').innerHTML = '<i></i> Signal unavailable';
-    $('#interaction-summary').textContent = 'Controls reconnect when the show signal returns.';
+    $('#song-instructions').textContent = 'Tonight’s playlist appears here when the show controller is connected.';
+    $('#interaction-summary').hidden = true;
     return;
   }
 
@@ -708,11 +710,11 @@ function renderSongs() {
   $('#song-count').textContent = `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`;
   $('#playlist-status').className = `playlist-status ${fresh ? 'is-live' : 'is-browse'}`;
   $('#playlist-status').innerHTML = `<i></i> ${fresh ? 'Show live' : 'Browse playlist'}`;
-  const mode = state.show.preferences?.viewerControlMode || 'JUKEBOX';
+  const features = viewerFeatures(state.show);
+  const mode = features.voting ? 'VOTING' : 'JUKEBOX';
   const interactionReady = canInteract();
-  const readOnly = state.show.preferences?.viewerPageViewOnly;
-  $('#song-instructions').textContent = readOnly
-    ? 'The playlist is in view-only mode. You can browse tonight’s music, but requests and votes are paused.'
+  $('#song-instructions').textContent = !features.controlsEnabled
+    ? 'Browse tonight’s music, artists, and show artwork.'
     : interactionReady
       ? mode === 'VOTING'
         ? 'Tap a song to cast your vote. The crowd decides what plays next.'
@@ -720,15 +722,14 @@ function renderSongs() {
       : 'The playlist is here to browse. Song controls open when the show goes live.';
 
   const interactionSummary = $('#interaction-summary');
-  if (readOnly) {
-    interactionSummary.textContent = 'View-only mode';
-  } else if (mode === 'VOTING' && (state.show.preferences?.dailyVoteLimit || 0) > 0 && state.votesRemainingLoaded) {
+  interactionSummary.hidden = !features.controlsEnabled;
+  if (features.voting && (state.show.preferences?.dailyVoteLimit || 0) > 0 && state.votesRemainingLoaded) {
     interactionSummary.textContent = state.votesRemaining === null
       ? 'Voting allowance managed by Remote Falcon'
       : `${state.votesRemaining} of ${state.show.preferences.dailyVoteLimit} votes left this show`;
-  } else if (mode === 'JUKEBOX' && (state.show.preferences?.jukeboxDepth || 0) > 0) {
+  } else if (features.jukebox && (state.show.preferences?.jukeboxDepth || 0) > 0) {
     interactionSummary.textContent = `${state.show.queue.length} of ${state.show.preferences.jukeboxDepth} queue spots filled`;
-  } else {
+  } else if (features.controlsEnabled) {
     interactionSummary.textContent = mode === 'VOTING' ? 'Live voting' : 'Jukebox requests';
   }
 
@@ -751,11 +752,11 @@ function renderSongs() {
 
     const card = document.createElement('article');
     card.className = 'song-card';
-    const unavailableReason = sequenceAvailabilityReason(state.show, song);
+    const unavailableReason = features.controlsEnabled ? sequenceAvailabilityReason(state.show, song) : '';
     const isPlaying = [state.show.playingNow, state.show.playingNowSequence?.name]
       .filter(Boolean)
       .includes(song.name);
-    const isQueued = state.show.queue.some((request) => request.sequence?.name === song.name);
+    const isQueued = features.jukebox && state.show.queue.some((request) => request.sequence?.name === song.name);
     card.classList.toggle('is-unavailable', Boolean(unavailableReason));
     card.classList.toggle('is-playing', isPlaying);
     card.classList.toggle('is-queued', isQueued);
@@ -782,7 +783,7 @@ function renderSongs() {
     details.textContent = [song.artist, formatDuration(song.duration), song.type === 'SEQUENCE_GROUP' ? 'Song group' : ''].filter(Boolean).join(' · ') || 'Lights On Admiral';
     const meta = document.createElement('small');
     const votes = votesForSong(state.show, song);
-    meta.textContent = mode === 'VOTING' ? `${votes} ${votes === 1 ? 'vote' : 'votes'}` : isPlaying ? 'Playing now' : isQueued ? 'In the queue' : song.category || 'Light show track';
+    meta.textContent = features.voting ? `${votes} ${votes === 1 ? 'vote' : 'votes'}` : isPlaying ? 'Playing now' : isQueued ? 'In the queue' : song.category || 'Light show track';
     info.append(heading, details, meta);
     if (unavailableReason) {
       const availability = document.createElement('span');
@@ -791,20 +792,22 @@ function renderSongs() {
       info.append(availability);
     }
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'song-action';
-    button.dataset.song = song.name;
-    const noVotesLeft = mode === 'VOTING' && state.votesRemainingLoaded && state.votesRemaining === 0;
-    button.disabled = !interactionReady || Boolean(unavailableReason) || noVotesLeft || state.submitting.has(song.name);
-    button.setAttribute('aria-label', `${mode === 'VOTING' ? 'Vote for' : 'Request'} ${songTitle(song)}`);
-    button.title = unavailableReason || (noVotesLeft ? 'You have used tonight’s votes' : interactionReady ? (mode === 'VOTING' ? 'Vote for this song' : 'Add to queue') : 'Available when the show is live');
-    button.innerHTML = mode === 'VOTING'
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8C20 15.4 12 20 12 20Z"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
-    button.addEventListener('click', () => handleSongSubmit(song));
-
-    card.append(artwork, info, button);
+    card.append(artwork, info);
+    if (features.controlsEnabled) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'song-action';
+      button.dataset.song = song.name;
+      const noVotesLeft = features.voting && state.votesRemainingLoaded && state.votesRemaining === 0;
+      button.disabled = !interactionReady || Boolean(unavailableReason) || noVotesLeft || state.submitting.has(song.name);
+      button.setAttribute('aria-label', `${features.voting ? 'Vote for' : 'Request'} ${songTitle(song)}`);
+      button.title = unavailableReason || (noVotesLeft ? 'You have used tonight’s votes' : interactionReady ? (features.voting ? 'Vote for this song' : 'Add to queue') : 'Available when the show is live');
+      button.innerHTML = features.voting
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8C20 15.4 12 20 12 20Z"/></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      button.addEventListener('click', () => handleSongSubmit(song));
+      card.append(button);
+    }
     elements.push(card);
   });
   grid.replaceChildren(...elements);
@@ -835,7 +838,7 @@ async function queryLocationPermission() {
 function renderLocationHelp() {
   const help = $('#location-help');
   if (!help) return;
-  const isGeo = state.show?.preferences?.locationCheckMethod === 'GEO';
+  const isGeo = viewerFeatures(state.show).geoLocation;
   const shouldShow = isGeo && (state.locationHelpNeeded || ['denied', 'unsupported'].includes(state.locationPermission));
   help.hidden = !shouldShow;
   if (!shouldShow) return;
@@ -974,7 +977,7 @@ function render() {
 
 async function refreshVotesRemaining() {
   const preferences = state.show?.preferences || {};
-  if (preferences.viewerControlMode !== 'VOTING' || (preferences.dailyVoteLimit || 0) <= 0) {
+  if (!viewerFeatures(state.show).voting || (preferences.dailyVoteLimit || 0) <= 0) {
     state.votesRemaining = null;
     state.votesRemainingLoaded = false;
     return;
