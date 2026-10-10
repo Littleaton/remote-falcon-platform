@@ -23,6 +23,11 @@ git pull
 ./upgrade.sh
 ```
 
+The Lights On Admiral custom public site on the current self-hosted server uses
+a separate checksum-verified snapshot workflow. For that site, follow
+[`LIGHTS-ON-ADMIRAL-DEPLOY.md`](LIGHTS-ON-ADMIRAL-DEPLOY.md) instead of the
+generic commands above.
+
 ## What's here
 
 ```

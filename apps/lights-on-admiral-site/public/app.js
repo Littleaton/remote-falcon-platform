@@ -37,7 +37,8 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const SPRITE_ASSETS = {
-  admiral: './assets/admiral-conductor-sprite-8-aligned-v1.png?v=20261009-static-cast1',
+  admiralBody: './assets/admiral-conductor-body-hinged-v2.png?v=20261010-conductor-hinge2',
+  admiralArm: './assets/admiral-conductor-baton-arm-v1.png?v=20261010-conductor-hinge2',
   death: './assets/death-singer-sprite-16-clean-v2.png',
   pumpkin: './assets/pumpkin-singer-sprite-16-clean-v2.png',
   phantom: './assets/phantom-singer-sprite-16-clean-v2.png'
@@ -364,7 +365,7 @@ async function revealPerformanceStage() {
 
   const performer = document.documentElement.dataset.performer;
   const visibleImages = $$(`.admiral-character img, .performer-${performer} img`);
-  const requiredAssets = [SPRITE_ASSETS.admiral, SPRITE_ASSETS[performer]];
+  const requiredAssets = [SPRITE_ASSETS.admiralBody, SPRITE_ASSETS.admiralArm, SPRITE_ASSETS[performer]];
   const decoded = Promise.all([
     ...requiredAssets.filter(Boolean).map(decodeImage),
     ...visibleImages.map(decodeImage)
