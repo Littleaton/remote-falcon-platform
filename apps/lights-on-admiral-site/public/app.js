@@ -1062,15 +1062,25 @@ function bindEvents() {
   });
 
   const navToggle = $('.nav-toggle');
+  const closeNav = () => {
+    navToggle.setAttribute('aria-expanded', 'false');
+    $('#site-nav').classList.remove('is-open');
+  };
   navToggle.addEventListener('click', () => {
     const open = navToggle.getAttribute('aria-expanded') !== 'true';
     navToggle.setAttribute('aria-expanded', String(open));
     $('#site-nav').classList.toggle('is-open', open);
   });
-  $$('#site-nav a').forEach((link) => link.addEventListener('click', () => {
-    navToggle.setAttribute('aria-expanded', 'false');
-    $('#site-nav').classList.remove('is-open');
-  }));
+  $$('#site-nav a').forEach((link) => link.addEventListener('click', closeNav));
+  document.addEventListener('pointerdown', (event) => {
+    if (navToggle.getAttribute('aria-expanded') === 'true' && !$('.site-header').contains(event.target)) closeNav();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeNav();
+  });
+  const compactNavMedia = window.matchMedia('(max-width: 700px), (orientation: landscape) and (max-height: 560px) and (max-width: 960px)');
+  if (compactNavMedia.addEventListener) compactNavMedia.addEventListener('change', closeNav);
+  else compactNavMedia.addListener?.(closeNav);
 
   $('#pulsemesh-link').addEventListener('click', startPulseMesh);
   $('#pulsemesh-reopen').addEventListener('click', reopenPulseMesh);

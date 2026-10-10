@@ -963,3 +963,70 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .stage-footer { bottom: 12px; width: auto; padding: 6px; flex-direction: row; }
   .stage-footer .button { min-height: 38px; }
 }
+
+/* Phones have very little vertical room in landscape. Use one compact menu
+   pattern across both narrow and modern wide phones instead of squeezing the
+   desktop navigation into the header or opening a full-height link stack. */
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 960px) {
+  .site-loading-screen::before { inset: 5%; }
+  .site-loading-screen::after { inset: 8%; }
+  .site-loading-brand img { width: clamp(92px, 21vh, 132px); }
+  .site-loading-brand strong { margin-top: 9px; font-size: clamp(25px, 7vh, 36px); }
+  .site-loading-brand span { margin-top: 7px; font-size: 6px; }
+
+  .site-header {
+    width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px);
+    height: 58px;
+    margin-top: 6px;
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-left: max(8px, env(safe-area-inset-left));
+    top: 6px;
+  }
+  .site-header::after { left: max(8px, env(safe-area-inset-left)); width: 58px; }
+  .brand { gap: 7px; }
+  .brand-mark { width: 47px; height: 44px; }
+  .brand-type strong { font-size: 17px; }
+  .brand-kicker { margin-top: 4px; font-size: 5.5px; letter-spacing: .2em; }
+  .header-show-status { display: none; }
+  .nav-toggle { display: block; width: 40px; height: 40px; margin-left: auto; padding: 8px; }
+
+  .site-nav {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: auto;
+    width: min(390px, calc(100vw - 16px));
+    max-height: calc(100dvh - 76px);
+    padding: 6px;
+    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 5px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgba(240, 154, 50, .38);
+    background: rgba(7, 9, 13, .98);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .7), 0 0 24px rgba(231, 64, 34, .12);
+    backdrop-filter: blur(18px);
+  }
+  .site-nav.is-open { display: grid; }
+  .site-nav a,
+  .site-nav .nav-youtube {
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 9px 11px;
+    justify-content: flex-start;
+    text-align: left;
+    border-color: rgba(240, 154, 50, .14);
+    background: rgba(255, 255, 255, .025);
+  }
+  .site-nav .nav-youtube { border-color: rgba(239, 73, 40, .4); }
+
+  :root[data-season="halloween"] .hero { padding-top: 12px; }
+  :root[data-season="halloween"] .hero-copy { top: 18px; width: 94%; }
+  :root[data-season="halloween"] .hero h1 { font-size: clamp(38px, 7vw, 50px); }
+  :root[data-season="halloween"] .hero-summary { margin-top: 6px; font-size: 8px; }
+  .halloween-stage { min-height: 430px; aspect-ratio: 16 / 10; }
+  .stage-footer { bottom: 8px; }
+}
