@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test",
     "build": "node scripts/build.mjs",
-    "preview": "node scripts/preview.mjs"
+    "preview": "node scripts/preview.mjs",
+    "start": "node scripts/server.mjs"
   }
 }

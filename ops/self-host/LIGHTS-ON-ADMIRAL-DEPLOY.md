@@ -10,6 +10,7 @@ not upgrade or restart the rest of the self-hosted Remote Falcon stack.
 | Public URL | `https://lightsonadmiral.com/` |
 | SSH host | `192.168.50.211` |
 | SSH user | `loaadmin` |
+| Approved local SSH key | `C:\Users\aaron\.ssh\lights_on_admiral_deploy` |
 | Server repository | `/home/loaadmin/remote-falcon-platform` |
 | Site source | `apps/lights-on-admiral-site` |
 | Compose file | `ops/self-host/docker-compose.yaml` |
@@ -28,8 +29,10 @@ the deployed site unchanged or conflict with server-local files. Until the
 server checkout is deliberately migrated, deploy an immutable, checksum-
 verified archive of the local site source.
 
-Do not place credentials in this file or in shell history. Enter the SSH
-password interactively, or use an approved SSH key.
+Do not place credentials in this file or in shell history. The server already
+trusts the dedicated key at
+`C:\Users\aaron\.ssh\lights_on_admiral_deploy`; use it for SSH and SCP. Only
+request interactive authentication if a batch-mode key check fails.
 
 ## 1. Establish a stable local snapshot
 
@@ -87,25 +90,23 @@ during packaging, delete only that archive and build a new one after validation.
 
 ## 3. Create an isolated server staging directory
 
-Connect interactively:
+First verify passwordless key access:
 
 ```powershell
-ssh loaadmin@192.168.50.211
+ssh -i C:\Users\aaron\.ssh\lights_on_admiral_deploy -o BatchMode=yes loaadmin@192.168.50.211 "printf key-ready"
 ```
 
-On the server, create a unique staging directory and retain the exact printed
-path:
+The command must print `key-ready`. Then create a unique staging directory and
+retain the exact printed path:
 
-```sh
-STAGE_DIR=$(mktemp -d /home/loaadmin/loa-site-deploy.XXXXXX)
-printf '%s\n' "$STAGE_DIR"
-exit
+```powershell
+ssh -i C:\Users\aaron\.ssh\lights_on_admiral_deploy -o BatchMode=yes loaadmin@192.168.50.211 "mktemp -d /home/loaadmin/loa-site-deploy.XXXXXX"
 ```
 
 Copy the archive to that exact directory from the local PowerShell session:
 
 ```powershell
-scp $DeployArchive loaadmin@192.168.50.211:/home/loaadmin/loa-site-deploy.REPLACE_WITH_PRINTED_SUFFIX/
+scp -i C:\Users\aaron\.ssh\lights_on_admiral_deploy -o BatchMode=yes $DeployArchive loaadmin@192.168.50.211:/home/loaadmin/loa-site-deploy.REPLACE_WITH_PRINTED_SUFFIX/
 ```
 
 Never put the password on the command line.
@@ -156,7 +157,13 @@ Wait for `self-host-show-site-1` to report `healthy`, then verify the origin:
 
 ```sh
 curl -fsS http://127.0.0.1:3001/health.json
+curl -fsSI http://127.0.0.1:3001/ | tr -d '\r' | grep -i '^x-lights-on-admiral-season:'
 ```
+
+The seasonal response header confirms that the site server selected the HTML
+metadata for the current `America/Denver` date. October returns `halloween`,
+the Sunday-through-Saturday week containing November 11 returns `veterans`,
+December returns `christmas`, and other dates return `lights`.
 
 If it does not become healthy, inspect only this service before changing
 anything else:
@@ -174,9 +181,11 @@ https://lightsonadmiral.com/?verify=DEPLOY_SHA_AND_TIMESTAMP
 ```
 
 Confirm that the page loads over HTTPS and that the intended visible change is
-present. If the change is not visible, compare the served HTML/assets with the
-packaged snapshot before rebuilding again; do not assume the tunnel needs to be
-reconfigured.
+present. Also confirm the response includes the expected
+`X-Lights-On-Admiral-Season` header and that the returned HTML contains the
+matching title, description, and social image. If the change is not visible,
+compare the served HTML/assets with the packaged snapshot before rebuilding
+again; do not assume the tunnel needs to be reconfigured.
 
 Only after the container health check, origin check, and public check all pass
 may the deployment be reported as complete.

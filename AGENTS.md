@@ -34,7 +34,9 @@ container rebuild, and live verification.
   alter Cloudflare routes during a normal website deployment.
 - Never store or print an SSH password, tunnel token, certificate, or other
   secret in this repository, a command, a log, or a chat response. Authenticate
-  interactively or use an approved SSH key.
+  with the approved key at
+  `C:\Users\aaron\.ssh\lights_on_admiral_deploy`. Do not ask for or use the
+  server password unless that key has first been checked and found unusable.
 - Do not report a deployment as complete until the `show-site` container is
   healthy, its host-local health endpoint succeeds, and the public site has
   been checked with a cache-busting URL.

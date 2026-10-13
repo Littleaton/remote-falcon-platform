@@ -1,28 +1,16 @@
-import { createReadStream, statSync } from 'node:fs';
-import { createServer } from 'node:http';
-import { extname, join, normalize } from 'node:path';
+import { resolve } from 'node:path';
 
-const root = join(process.cwd(), 'dist');
-const contentTypes = {
-  '.css': 'text/css',
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml'
-};
+import { SITE_CONFIG } from '../public/config.js';
+import { dateFromPreview, seasonForDate } from '../public/seasons.js';
+import { startSiteServer } from './site-server.mjs';
 
-createServer((request, response) => {
-  const pathname = new URL(request.url, 'http://localhost').pathname;
-  let file = normalize(join(root, pathname === '/' ? 'index.html' : pathname));
-  if (!file.startsWith(root)) {
-    response.writeHead(403).end();
-    return;
-  }
-  try {
-    if (statSync(file).isDirectory()) file = join(file, 'index.html');
-  } catch {
-    file = join(root, 'index.html');
-  }
-  response.setHeader('Content-Type', contentTypes[extname(file)] || 'application/octet-stream');
-  createReadStream(file).pipe(response);
-}).listen(4173, '127.0.0.1', () => console.log('Preview: http://127.0.0.1:4173'));
+await startSiteServer({
+  root: resolve(process.cwd(), 'dist'),
+  siteConfig: SITE_CONFIG,
+  seasonForDate,
+  dateFromPreview,
+  port: Number(process.env.PORT || 4173),
+  host: process.env.HOST || '127.0.0.1',
+  allowThemePreview: true,
+  proxyGraphqlUrl: 'https://lightsonadmiral.com/remote-falcon-viewer/graphql'
+});

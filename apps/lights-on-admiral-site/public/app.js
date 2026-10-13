@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './config.js?v=20261009-show-state1';
+import { SITE_CONFIG } from './config.js?v=20261013-seasons4';
 import {
   RemoteFalconError,
   fetchShow,
@@ -13,6 +13,9 @@ import {
   votesForSong
 } from './api.js?v=20261009-rf-flags1';
 import { choosePerformer } from './performers.js';
+import { localArtworkForSong } from './song-artwork.js?v=20261012-song-art1';
+import { clampSongIndex, posterTheme } from './song-posters.js?v=20261012-song-deck1';
+import { dateFromPreview, seasonForDate } from './seasons.js?v=20261013-seasons4';
 
 const state = {
   show: null,
@@ -28,7 +31,11 @@ const state = {
   pageViewRecorded: false,
   locationPermission: 'unknown',
   locationHelpNeeded: false,
-  lastCoords: null
+  lastCoords: null,
+  songIndex: 0,
+  playlistView: 'browse',
+  songDragStart: null,
+  ignoreSongCardClickUntil: 0
 };
 
 let pulseMeshFrame = null;
@@ -45,15 +52,11 @@ const SPRITE_ASSETS = {
 };
 
 function getSeason(date = new Date()) {
-  const preview = new URLSearchParams(window.location.search).get('season');
+  const params = new URLSearchParams(window.location.search);
+  const preview = params.get('season');
   if (preview && SITE_CONFIG.seasons[preview]) return preview;
   if (SITE_CONFIG.season !== 'auto' && SITE_CONFIG.seasons[SITE_CONFIG.season]) return SITE_CONFIG.season;
-
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  if (month === 9 || month === 10 || (month === 11 && day === 1)) return 'halloween';
-  if (month === 11 && day <= 12) return 'veterans';
-  return 'christmas';
+  return seasonForDate(dateFromPreview(params.get('date')) || date);
 }
 
 function applyPerformer() {
@@ -221,6 +224,7 @@ function startVisitTraffic() {
   const randomBetween = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
   const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
   const shuffled = (items) => [...items].sort(() => Math.random() - 0.5);
+  const showIsLive = () => document.documentElement.dataset.showRunning === 'true';
   const animateCar = async (car, keyframes, options, finalState) => {
     if (!car.isConnected) return;
     const animation = car.animate(keyframes, { ...options, fill: 'forwards' });
@@ -237,7 +241,12 @@ function startVisitTraffic() {
   const runThroughLane = async () => {
     let queue = shuffled(throughCars);
     while (throughCars[0]?.isConnected) {
+      if (!showIsLive()) {
+        await wait(800);
+        continue;
+      }
       await wait(randomBetween(2600, 8200));
+      if (!showIsLive()) continue;
       if (!queue.length) queue = shuffled(throughCars);
       const car = queue.shift();
       car.dataset.trafficState = 'passing';
@@ -261,7 +270,12 @@ function startVisitTraffic() {
   const runWatchLane = async () => {
     let firstCycle = true;
     while (watchCars[0]?.isConnected) {
+      if (!showIsLive()) {
+        await wait(800);
+        continue;
+      }
       await wait(firstCycle ? randomBetween(500, 1400) : randomBetween(4800, 13200));
+      if (!showIsLive()) continue;
       firstCycle = false;
 
       const roll = Math.random();
@@ -376,6 +390,48 @@ async function revealPerformanceStage() {
   requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('sprites-ready')));
 }
 
+function setMetaContent(selector, content) {
+  if (!content) return;
+  document.querySelector(selector)?.setAttribute('content', String(content));
+}
+
+function applySeasonMetadata(season) {
+  const pageTitle = season.pageTitle || `${SITE_CONFIG.showName} | ${season.label}`;
+  const socialTitle = season.socialTitle || pageTitle;
+  const description = season.metaDescription || season.summary;
+  const socialDescription = season.socialDescription || description;
+  const socialImage = new URL(season.socialImage, SITE_CONFIG.siteUrl).href;
+
+  document.title = pageTitle;
+  setMetaContent('meta[name="theme-color"]', season.themeColor || '#100912');
+  setMetaContent('meta[name="description"]', description);
+  setMetaContent('meta[name="keywords"]', season.keywords);
+  setMetaContent('meta[property="og:title"]', socialTitle);
+  setMetaContent('meta[property="og:description"]', socialDescription);
+  setMetaContent('meta[property="og:image"]', socialImage);
+  setMetaContent('meta[property="og:image:secure_url"]', socialImage);
+  setMetaContent('meta[property="og:image:width"]', season.socialImageWidth);
+  setMetaContent('meta[property="og:image:height"]', season.socialImageHeight);
+  setMetaContent('meta[property="og:image:alt"]', season.socialImageAlt);
+  setMetaContent('meta[name="twitter:title"]', socialTitle);
+  setMetaContent('meta[name="twitter:description"]', socialDescription);
+  setMetaContent('meta[name="twitter:image"]', socialImage);
+  setMetaContent('meta[name="twitter:image:alt"]', season.socialImageAlt);
+
+  const structuredData = document.querySelector('#site-structured-data');
+  if (structuredData) {
+    try {
+      const metadata = JSON.parse(structuredData.textContent);
+      metadata.description = description;
+      metadata.image = socialImage;
+      metadata.keywords = season.keywords;
+      structuredData.textContent = JSON.stringify(metadata);
+    } catch (error) {
+      console.warn('Unable to update seasonal structured data.', error);
+    }
+  }
+}
+
 function applyConfig() {
   const seasonKey = getSeason();
   const season = SITE_CONFIG.seasons[seasonKey];
@@ -389,7 +445,26 @@ function applyConfig() {
   $('#season-label').textContent = season.label;
   $('#season-range').textContent = season.dateRange;
   $('#location-label').textContent = SITE_CONFIG.locationLabel;
-  document.title = `${SITE_CONFIG.showName} · ${season.label}`;
+  applySeasonMetadata(season);
+
+  $$('[data-season-mark]').forEach((image) => { image.src = season.mark; });
+  $$('[data-season-kicker]').forEach((label) => { label.textContent = season.brandKicker; });
+
+  const aboutImage = $('#about-season-image');
+  aboutImage.src = season.aboutImage;
+  aboutImage.alt = season.aboutAlt;
+  $('#about-season-caption').textContent = season.aboutCaption;
+
+  const visitNight = $('#visit-night');
+  visitNight.style.setProperty('--visit-live-image', `url("${season.visitImage}")`);
+  visitNight.style.setProperty('--visit-closed-image', `url("${season.closedImage}")`);
+
+  if (season.heroImage) {
+    $('#seasonal-stage').style.setProperty('--season-hero-image', `url("${season.heroImage}")`);
+    $('#seasonal-stage').setAttribute('aria-label', season.aboutAlt);
+    $('#season-stage-title').textContent = season.stageTitle;
+    $('#season-stage-line').textContent = season.stageLine;
+  }
 
   if (seasonKey === 'halloween') {
     randomizePerformanceTiming();
@@ -409,8 +484,13 @@ function applyConfig() {
   if (SITE_CONFIG.showHours.length) {
     $('#show-hours').textContent = SITE_CONFIG.showHours.join(' · ');
     $('#status-hours').textContent = SITE_CONFIG.showHours.slice(1).join(' · ') || SITE_CONFIG.showHours[0];
+    $('#closed-show-hours').textContent = SITE_CONFIG.showHours.join(' · ');
   }
-  if (SITE_CONFIG.lastNight) $('#last-night').textContent = SITE_CONFIG.lastNight;
+  $('#status-season-schedule').textContent = season.statusSchedule;
+  if (season.lastNight) {
+    $('#last-night').textContent = season.lastNight;
+    $('#closed-last-night').textContent = season.lastNight;
+  }
   if (SITE_CONFIG.directionsUrl) {
     const link = $('#directions-link');
     link.href = SITE_CONFIG.directionsUrl;
@@ -464,7 +544,7 @@ function setStatusArtwork(song, running) {
   const copy = $('.now-copy');
   const frame = $('#now-artwork');
   const image = $('#now-artwork-image');
-  const url = running ? safeArtworkUrl(song?.imageUrl) : '';
+  const url = running ? safeArtworkUrl(song?.imageUrl || localArtworkForSong(song)) : '';
   copy.classList.toggle('has-artwork', Boolean(url));
   frame.hidden = !url;
   if (!url) {
@@ -598,6 +678,7 @@ function renderStatus() {
   const show = state.show;
   const card = $('#signal-card');
   const running = showIsRunning();
+  renderVisitScene(running);
   card.classList.toggle('is-live', running);
   const header = $('#header-show-status');
   header.classList.toggle('is-live', running);
@@ -629,16 +710,32 @@ function renderStatus() {
   setStatusArtwork(show.playingNowSequence, running);
 }
 
+function renderVisitScene(running) {
+  const scene = $('#visit-night');
+  if (!scene) return;
+  const previewLive = new URLSearchParams(window.location.search).get('visit') === 'live';
+  const visitRunning = running || previewLive;
+  scene.classList.toggle('is-show-live', visitRunning);
+  scene.classList.toggle('is-show-offline', !visitRunning);
+  document.documentElement.dataset.showRunning = String(running);
+  $('#visit-closed-scene').hidden = visitRunning;
+  const season = SITE_CONFIG.seasons[document.documentElement.dataset.season] || SITE_CONFIG.seasons.lights;
+  $('#visit-scene-description').textContent = visitRunning
+    ? season.visitLiveDescription
+    : 'The Lights On Admiral show is offline. Closed butterfly-wing gates mark the quiet entrance until show hours.';
+}
+
 function renderQueue() {
   const panel = $('.queue-panel');
   const layout = $('.song-layout');
   const features = viewerFeatures(state.show);
-  const visible = features.jukebox || features.voting;
+  const queue = state.show?.queue || [];
+  const hasVotes = features.voting && (state.show?.sequences || []).some((song) => votesForSong(state.show, song) > 0);
+  const visible = (features.jukebox || features.voting) && (showIsRunning() || queue.length > 0 || hasVotes);
   panel.hidden = !visible;
   layout.classList.toggle('is-browse-only', !visible);
   if (!visible || !state.show) return;
 
-  const queue = state.show?.queue || [];
   const list = $('#queue-list');
 
   if (features.voting) {
@@ -688,6 +785,120 @@ function renderQueue() {
   }
 }
 
+function filteredSongs() {
+  if (!state.show) return [];
+  return orderedSongsForDisplay(state.show.sequences.filter((song) => {
+    const haystack = `${songTitle(song)} ${song.artist || ''}`.toLowerCase();
+    return haystack.includes(state.query);
+  }));
+}
+
+function updatePlaylistPresentation(songCount) {
+  const browse = state.playlistView === 'browse';
+  const grid = $('#song-grid');
+  grid.classList.toggle('is-browse-view', browse);
+  grid.classList.toggle('is-grid-view', !browse);
+  $('#song-stage').classList.toggle('is-grid-view', !browse);
+  $('#song-deck-controls').hidden = !browse || songCount === 0;
+  $('#song-deck-hint').hidden = !browse || songCount === 0;
+  $$('[data-playlist-view]').forEach((button) => {
+    const active = button.dataset.playlistView === state.playlistView;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  updateSongDeckPosition(songCount);
+}
+
+function updateSongDeckPosition(songCount = filteredSongs().length) {
+  state.songIndex = clampSongIndex(state.songIndex, songCount);
+  const browse = state.playlistView === 'browse';
+  $$('#song-grid .song-card').forEach((card, index) => {
+    const distance = index - state.songIndex;
+    const outside = Math.abs(distance) > 2;
+    card.style.setProperty('--deck-distance', distance);
+    card.dataset.deckPosition = outside ? 'outside' : String(distance);
+    card.classList.toggle('is-active', browse && distance === 0);
+    if (browse && distance === 0) card.setAttribute('aria-current', 'true');
+    else card.removeAttribute('aria-current');
+    card.setAttribute('aria-hidden', String(browse && outside));
+    const action = card.querySelector('.song-action');
+    if (action) action.tabIndex = !browse || distance === 0 ? 0 : -1;
+  });
+
+  $('#song-prev').disabled = state.songIndex <= 0;
+  $('#song-next').disabled = songCount === 0 || state.songIndex >= songCount - 1;
+  $('#song-position').textContent = songCount ? `${state.songIndex + 1} / ${songCount}` : '— / —';
+}
+
+function selectSongIndex(index) {
+  const songCount = filteredSongs().length;
+  const nextIndex = clampSongIndex(index, songCount);
+  if (nextIndex === state.songIndex) return;
+  state.songIndex = nextIndex;
+  updateSongDeckPosition(songCount);
+}
+
+function setPlaylistView(view) {
+  if (!['browse', 'grid'].includes(view) || view === state.playlistView) return;
+  state.playlistView = view;
+  try { sessionStorage.setItem('loa-playlist-view', view); } catch {}
+  updatePlaylistPresentation(filteredSongs().length);
+}
+
+function makeGeneratedSongPoster(song) {
+  const theme = posterTheme(song);
+  const poster = document.createElement('div');
+  poster.className = `song-poster song-poster-generated motif-${theme.motif}`;
+  poster.setAttribute('aria-hidden', 'true');
+  poster.style.setProperty('--poster-glow', theme.glow);
+  poster.style.setProperty('--poster-hot', theme.hot);
+  poster.style.setProperty('--poster-cool', theme.cool);
+  poster.style.setProperty('--poster-ink', theme.ink);
+  poster.style.setProperty('--poster-angle', theme.angle);
+  poster.style.setProperty('--poster-flare-x', theme.flareX);
+  poster.style.setProperty('--poster-flare-y', theme.flareY);
+
+  const crest = document.createElement('img');
+  const season = SITE_CONFIG.seasons[document.documentElement.dataset.season] || SITE_CONFIG.seasons.lights;
+  crest.src = season.mark;
+  crest.alt = '';
+  crest.className = 'song-poster-crest';
+  const brand = document.createElement('span');
+  brand.className = 'song-poster-brand';
+  brand.textContent = 'Lights On Admiral';
+  const wings = document.createElement('span');
+  wings.className = 'song-poster-wings';
+  const copy = document.createElement('span');
+  copy.className = 'song-poster-copy';
+  const title = document.createElement('strong');
+  title.textContent = songTitle(song);
+  const artist = document.createElement('small');
+  artist.textContent = song.artist || season.label;
+  copy.append(title, artist);
+  poster.append(crest, brand, wings, copy);
+  return poster;
+}
+
+function makeSongPoster(song) {
+  const artworkUrl = safeArtworkUrl(song.imageUrl || localArtworkForSong(song));
+  if (!artworkUrl) return makeGeneratedSongPoster(song);
+
+  const poster = document.createElement('div');
+  poster.className = 'song-poster song-poster-custom';
+  const artwork = document.createElement('img');
+  artwork.src = artworkUrl;
+  artwork.alt = `Artwork for ${songTitle(song)}`;
+  artwork.loading = 'lazy';
+  artwork.referrerPolicy = 'no-referrer';
+  artwork.className = 'song-poster-image';
+  artwork.addEventListener('error', () => poster.replaceWith(makeGeneratedSongPoster(song)));
+  const badge = document.createElement('span');
+  badge.className = 'song-poster-custom-badge';
+  badge.textContent = 'Lights On Admiral';
+  poster.append(artwork, badge);
+  return poster;
+}
+
 function renderSongs() {
   const grid = $('#song-grid');
   if (state.loading) return;
@@ -699,14 +910,12 @@ function renderSongs() {
     $('#playlist-status').innerHTML = '<i></i> Signal unavailable';
     $('#song-instructions').textContent = 'Tonight’s playlist appears here when the show controller is connected.';
     $('#interaction-summary').hidden = true;
+    updatePlaylistPresentation(0);
     return;
   }
 
-  const songs = orderedSongsForDisplay(state.show.sequences.filter((song) => {
-    const haystack = `${songTitle(song)} ${song.artist || ''}`.toLowerCase();
-    return haystack.includes(state.query);
-  }));
-
+  const songs = filteredSongs();
+  state.songIndex = clampSongIndex(state.songIndex, songs.length);
   const fresh = showIsRunning();
   $('#song-count').textContent = `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`;
   $('#playlist-status').className = `playlist-status ${fresh ? 'is-live' : 'is-browse'}`;
@@ -718,8 +927,8 @@ function renderSongs() {
     ? 'Browse tonight’s music, artists, and show artwork.'
     : interactionReady
       ? mode === 'VOTING'
-        ? 'Tap a song to cast your vote. The crowd decides what plays next.'
-        : 'Tap a song and it joins the light queue.'
+        ? 'Choose a track to cast your vote. The crowd decides what plays next.'
+        : 'Choose a track and add it to the light queue.'
       : 'The playlist is here to browse. Song controls open when the show goes live.';
 
   const interactionSummary = $('#interaction-summary');
@@ -736,23 +945,14 @@ function renderSongs() {
 
   if (!songs.length) {
     grid.innerHTML = `<div class="empty-state"><h3>${state.show.sequences.length ? 'No songs match that search.' : 'The playlist is still being assembled.'}</h3><p>${state.show.sequences.length ? 'Try a title or artist.' : 'Songs will appear automatically after the show controller syncs.'}</p></div>`;
+    updatePlaylistPresentation(0);
     return;
   }
 
-  const elements = [];
-  let lastCategory = null;
-  songs.forEach((song) => {
-    const category = song.category || '';
-    if (category && category !== lastCategory) {
-      const heading = document.createElement('h3');
-      heading.className = 'song-category-heading';
-      heading.textContent = category;
-      elements.push(heading);
-    }
-    lastCategory = category;
-
+  const elements = songs.map((song, index) => {
     const card = document.createElement('article');
     card.className = 'song-card';
+    card.dataset.songIndex = index;
     const unavailableReason = features.controlsEnabled ? sequenceAvailabilityReason(state.show, song) : '';
     const isPlaying = [state.show.playingNow, state.show.playingNowSequence?.name]
       .filter(Boolean)
@@ -761,20 +961,6 @@ function renderSongs() {
     card.classList.toggle('is-unavailable', Boolean(unavailableReason));
     card.classList.toggle('is-playing', isPlaying);
     card.classList.toggle('is-queued', isQueued);
-
-    let artwork;
-    const artworkUrl = safeArtworkUrl(song.imageUrl);
-    if (artworkUrl) {
-      artwork = document.createElement('img');
-      artwork.src = artworkUrl;
-      artwork.alt = `Artwork for ${songTitle(song)}`;
-      artwork.loading = 'lazy';
-      artwork.referrerPolicy = 'no-referrer';
-      artwork.className = 'song-art';
-      artwork.addEventListener('error', () => artwork.replaceWith(makeArtworkFallback()));
-    } else {
-      artwork = makeArtworkFallback();
-    }
 
     const info = document.createElement('div');
     info.className = 'song-info';
@@ -793,7 +979,7 @@ function renderSongs() {
       info.append(availability);
     }
 
-    card.append(artwork, info);
+    card.append(makeSongPoster(song), info);
     if (features.controlsEnabled) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -803,22 +989,22 @@ function renderSongs() {
       button.disabled = !interactionReady || Boolean(unavailableReason) || noVotesLeft || state.submitting.has(song.name);
       button.setAttribute('aria-label', `${features.voting ? 'Vote for' : 'Request'} ${songTitle(song)}`);
       button.title = unavailableReason || (noVotesLeft ? 'You have used tonight’s votes' : interactionReady ? (features.voting ? 'Vote for this song' : 'Add to queue') : 'Available when the show is live');
-      button.innerHTML = features.voting
+      button.innerHTML = `<span>${features.voting ? 'Vote for this track' : 'Request this track'}</span>${features.voting
         ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.4 4 9.5A4.5 4.5 0 0 1 12 6.7a4.5 4.5 0 0 1 8 2.8C20 15.4 12 20 12 20Z"/></svg>'
-        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
-      button.addEventListener('click', () => handleSongSubmit(song));
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'}`;
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        handleSongSubmit(song);
+      });
       card.append(button);
     }
-    elements.push(card);
+    card.addEventListener('click', () => {
+      if (state.playlistView === 'browse' && Date.now() >= state.ignoreSongCardClickUntil) selectSongIndex(index);
+    });
+    return card;
   });
   grid.replaceChildren(...elements);
-}
-
-function makeArtworkFallback() {
-  const artwork = document.createElement('div');
-  artwork.className = 'song-art song-art-fallback';
-  artwork.setAttribute('aria-hidden', 'true');
-  return artwork;
+  updatePlaylistPresentation(songs.length);
 }
 
 function isInAppBrowser() {
@@ -1057,9 +1243,57 @@ function schedulePoll() {
 }
 
 function bindEvents() {
+  try {
+    if (sessionStorage.getItem('loa-playlist-view') === 'grid') state.playlistView = 'grid';
+  } catch {}
+
   $('#song-search').addEventListener('input', (event) => {
     state.query = event.target.value.trim().toLowerCase();
+    state.songIndex = 0;
     renderSongs();
+  });
+
+  $$('[data-playlist-view]').forEach((button) => {
+    button.addEventListener('click', () => setPlaylistView(button.dataset.playlistView));
+  });
+  $('#song-prev').addEventListener('click', () => selectSongIndex(state.songIndex - 1));
+  $('#song-next').addEventListener('click', () => selectSongIndex(state.songIndex + 1));
+
+  const songStage = $('#song-stage');
+  songStage.addEventListener('keydown', (event) => {
+    if (state.playlistView !== 'browse') return;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      selectSongIndex(state.songIndex - 1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      selectSongIndex(state.songIndex + 1);
+    }
+  });
+  songStage.addEventListener('wheel', (event) => {
+    if (state.playlistView !== 'browse' || Math.abs(event.deltaX) < Math.abs(event.deltaY) || Math.abs(event.deltaX) < 24) return;
+    event.preventDefault();
+    selectSongIndex(state.songIndex + (event.deltaX > 0 ? 1 : -1));
+  }, { passive: false });
+  songStage.addEventListener('pointerdown', (event) => {
+    if (state.playlistView !== 'browse' || event.button !== 0 || event.target.closest('button')) return;
+    state.songDragStart = { id: event.pointerId, x: event.clientX };
+    songStage.classList.add('is-dragging');
+    try { songStage.setPointerCapture(event.pointerId); } catch {}
+  });
+  const finishSongDrag = (event) => {
+    if (!state.songDragStart || state.songDragStart.id !== event.pointerId) return;
+    const distance = event.clientX - state.songDragStart.x;
+    state.songDragStart = null;
+    songStage.classList.remove('is-dragging');
+    if (Math.abs(distance) < 48) return;
+    state.ignoreSongCardClickUntil = Date.now() + 350;
+    selectSongIndex(state.songIndex + (distance < 0 ? 1 : -1));
+  };
+  songStage.addEventListener('pointerup', finishSongDrag);
+  songStage.addEventListener('pointercancel', () => {
+    state.songDragStart = null;
+    songStage.classList.remove('is-dragging');
   });
 
   const navToggle = $('.nav-toggle');
