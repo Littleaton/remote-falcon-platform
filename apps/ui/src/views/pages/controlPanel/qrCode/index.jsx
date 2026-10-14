@@ -35,6 +35,7 @@ import { DEFAULT_STYLE, PNG_SIZES, SEASONAL_PRESETS } from './presets';
 import { downloadCard } from './renderCard';
 import { evaluateScanSafety, SCAN_REASON_TEXT } from './scanSafety';
 import { hasCustomStyle, loadQrStyle, saveQrStyle } from './qrStyleStorage';
+import { buildQrUrl } from './qrUrl';
 
 const STYLE_KEYS = Object.keys(DEFAULT_STYLE);
 const stylesEqual = (a, b) => STYLE_KEYS.every((k) => a[k] === b[k]);
@@ -46,6 +47,8 @@ const QrCode = () => {
   const publicUrl = useShowPublicUrl();
 
   const [style, setStyle] = useState(() => loadQrStyle(subdomain));
+  const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
   const [utmTagged, setUtmTagged] = useState(false);
   const [cardLayout, setCardLayout] = useState(false);
   const [caption, setCaption] = useState('Scan to request your songs!');
@@ -77,11 +80,10 @@ const QrCode = () => {
     }
   }, [subdomain]);
 
-  const encodedData = useMemo(() => {
-    if (!publicUrl) return '';
-    if (!utmTagged) return publicUrl;
-    return `${publicUrl}${publicUrl.includes('?') ? '&' : '?'}utm_source=qr&utm_medium=print`;
-  }, [publicUrl, utmTagged]);
+  const { encodedUrl: encodedData, error: customUrlError } = useMemo(
+    () => buildQrUrl({ publicUrl, customUrlEnabled, customUrl, utmTagged }),
+    [publicUrl, customUrlEnabled, customUrl, utmTagged]
+  );
 
   const safety = useMemo(() => evaluateScanSafety(style), [style]);
   const activePresetId = useMemo(() => SEASONAL_PRESETS.find((p) => stylesEqual(p.style, style))?.id, [style]);
@@ -107,6 +109,11 @@ const QrCode = () => {
 
   const resetStyle = () => setStyle({ ...DEFAULT_STYLE });
 
+  const toggleCustomUrl = (enabled) => {
+    setCustomUrlEnabled(enabled);
+    if (enabled) setCustomUrl((current) => current || publicUrl || '');
+  };
+
   const downloadName = `${subdomain || 'show'}-qr`;
 
   const trackDownload = (format) =>
@@ -115,6 +122,7 @@ const QrCode = () => {
       size: format === 'svg' ? null : pngSize,
       card_layout: format === 'png' && cardLayout,
       has_center_icon: style.emblem !== 'none',
+      custom_url: customUrlEnabled,
       utm_tagged: utmTagged,
       preset: activePresetId || 'custom'
     });
@@ -272,6 +280,30 @@ const QrCode = () => {
           >
             <Stack spacing={2.5}>
               <Box>
+                <FormControlLabel
+                  sx={{ mb: customUrlEnabled ? 1.5 : 0.5 }}
+                  control={
+                    <Switch
+                      checked={customUrlEnabled}
+                      onChange={(e) => toggleCustomUrl(e.target.checked)}
+                      inputProps={{ 'aria-label': 'Use a custom URL' }}
+                    />
+                  }
+                  label="Use a custom URL"
+                />
+                {customUrlEnabled && (
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Custom destination"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    error={Boolean(customUrlError)}
+                    helperText={customUrlError || 'This changes only this QR code, not your show’s public URL.'}
+                    sx={{ mb: 2 }}
+                  />
+                )}
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
                   Encoded URL
                 </Typography>
