@@ -80,4 +80,26 @@ describe('useShowPublicUrl', () => {
     const { result } = renderHook(() => useShowPublicUrl(), { wrapper: wrap(store) });
     expect(result.current).toBe('https://remote.example.com');
   });
+
+  it('uses the self-hosted redirect as the public show URL when configured', () => {
+    import.meta.env.VITE_SWAP_CP = 'true';
+    import.meta.env.VITE_CONTROL_PANEL_API = 'https://remote.example.com/remote-falcon-control-panel';
+    const store = buildStore({
+      showSubdomain: 'matt',
+      preferences: { selfHostedRedirectUrl: '  https://lights.example.com/  ' }
+    });
+    const { result } = renderHook(() => useShowPublicUrl(), { wrapper: wrap(store) });
+    expect(result.current).toBe('https://lights.example.com/');
+  });
+
+  it('falls back to the Remote Falcon viewer URL when the self-hosted redirect is blank', () => {
+    import.meta.env.VITE_SWAP_CP = 'true';
+    import.meta.env.VITE_CONTROL_PANEL_API = 'https://remote.example.com/remote-falcon-control-panel';
+    const store = buildStore({
+      showSubdomain: 'matt',
+      preferences: { selfHostedRedirectUrl: '   ' }
+    });
+    const { result } = renderHook(() => useShowPublicUrl(), { wrapper: wrap(store) });
+    expect(result.current).toBe('https://remote.example.com');
+  });
 });
