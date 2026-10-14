@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="24in" height="18in" viewBox="0 0 2400 1800" role="img" style="display:block;background:#000"
+     aria-labelledby="title description">
+  <title id="title">Lights On Admiral song request QR sign</title>
+  <desc id="description">Halloween yard sign inviting visitors to scan a QR code and pick the next song.</desc>
+  <style>@page { size: 24in 18in; margin: 0; }</style>
+
+  <defs>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#050507" stop-opacity=".18"/>
+      <stop offset=".48" stop-color="#050507" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#050507" stop-opacity=".38"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb12b"/>
+      <stop offset=".45" stop-color="#f16722"/>
+      <stop offset="1" stop-color="#d53429"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b95cff"/>
+      <stop offset="1" stop-color="#7b2ee6"/>
+    </linearGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="13" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#000" flood-opacity=".85"/>
+    </filter>
+    <clipPath id="innerClip"><rect x="42" y="42" width="2316" height="1716" rx="30"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#innerClip)">
+    <image x="0" y="0" width="2400" height="1800" preserveAspectRatio="xMidYMid slice"
+           xlink:href="halloween-background.png" href="halloween-background.png"/>
+    <rect width="2400" height="1800" fill="url(#shade)"/>
+    <ellipse cx="650" cy="885" rx="610" ry="720" fill="#030306" opacity=".38"/>
+    <ellipse cx="1832" cy="884" rx="590" ry="690" fill="#060408" opacity=".2"/>
+  </g>
+
+  <rect x="34" y="34" width="2332" height="1732" rx="34" fill="none" stroke="#160914" stroke-width="46"/>
+  <rect x="54" y="54" width="2292" height="1692" rx="22" fill="none" stroke="url(#orange)" stroke-width="10"/>
+  <rect x="73" y="73" width="2254" height="1654" rx="14" fill="none" stroke="#d6adff" stroke-opacity=".42" stroke-width="2"/>
+
+  <!-- Brand and drive-by-readable message -->
+  <g filter="url(#textShadow)">
+    <image x="371" y="82" width="400" height="273" preserveAspectRatio="xMidYMid meet"
+           xlink:href="loa-halloween-crest.svg" href="loa-halloween-crest.svg"/>
+    <text x="571" y="438" text-anchor="middle" fill="#fff6e9"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="84" letter-spacing="5">LIGHTS ON</text>
+    <text x="571" y="538" text-anchor="middle" fill="url(#orange)"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="112" letter-spacing="5">ADMIRAL</text>
+
+    <path d="M150 591 H992" stroke="#ff8a2a" stroke-width="7" stroke-linecap="round"/>
+    <path d="M240 612 H902" stroke="#9b43f3" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+
+    <text x="571" y="806" text-anchor="middle" fill="url(#orange)" stroke="#4b0914" stroke-width="6" paint-order="stroke"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="198" letter-spacing="7">SCAN</text>
+    <text x="571" y="968" text-anchor="middle" fill="#fff8e8"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="156" letter-spacing="4">TO PICK</text>
+    <text x="571" y="1110" text-anchor="middle" fill="#fff8e8"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="137" letter-spacing="4">THE NEXT</text>
+    <text x="571" y="1302" text-anchor="middle" fill="url(#orange)" stroke="#4b0914" stroke-width="6" paint-order="stroke"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="194" letter-spacing="5">SONG!</text>
+  </g>
+
+  <!-- Exact supplied QR artwork, not regenerated or altered -->
+  <g>
+    <rect x="1192" y="176" width="1072" height="1240" rx="34" fill="#050507" stroke="#000" stroke-width="18"/>
+    <rect x="1210" y="194" width="1036" height="1204" rx="23" fill="none" stroke="url(#orange)" stroke-width="9"/>
+    <text x="1728" y="282" text-anchor="middle" fill="#fff7ea"
+          font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+          font-size="94" letter-spacing="9">SCAN ME</text>
+    <rect x="1272" y="330" width="912" height="912" rx="12" fill="#0b0b0b"/>
+    <image x="1272" y="330" width="912" height="912" preserveAspectRatio="xMidYMid meet"
+           image-rendering="pixelated" xlink:href="lightsonadmiral-qr.png" href="lightsonadmiral-qr.png"/>
+    <text x="1728" y="1326" text-anchor="middle" fill="#ff9a32"
+          font-family="Arial, sans-serif" font-size="42" font-weight="900" letter-spacing="4">POINT YOUR CAMERA HERE</text>
+  </g>
+
+  <g filter="url(#softGlow)" opacity=".8">
+    <circle cx="1105" cy="324" r="8" fill="#ff8a2a"/>
+    <circle cx="1117" cy="351" r="4" fill="#bf68ff"/>
+    <circle cx="1100" cy="383" r="6" fill="#ff8a2a"/>
+    <circle cx="1121" cy="414" r="4" fill="#bf68ff"/>
+  </g>
+
+  <!-- Bottom URL band -->
+  <path d="M120 1472 H2280" stroke="#f16722" stroke-opacity=".55" stroke-width="3"/>
+  <rect x="290" y="1507" width="1820" height="148" rx="74" fill="#08070b" fill-opacity=".9" stroke="#8f39e8" stroke-width="3"/>
+  <text x="1200" y="1606" text-anchor="middle" fill="#fff6e9"
+        font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+        font-size="82" letter-spacing="10">LIGHTSONADMIRAL.COM</text>
+  <circle cx="237" cy="1582" r="9" fill="#ff8a2a"/>
+  <circle cx="2163" cy="1582" r="9" fill="#ff8a2a"/>
+</svg>
